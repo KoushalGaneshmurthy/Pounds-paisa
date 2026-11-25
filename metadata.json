@@ -1,0 +1,6 @@
+{
+  "name": "PoundWise — UK Student Expense Slider",
+  "description": "An Instagram-style horizontal slider expense tracker for Indian students in the UK to monitor weekly and monthly pounds across budget, groceries, travel, and other essentials.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
