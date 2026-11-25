@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Cloud, Plus, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Cloud, Database, Plus, RefreshCw, Sparkles } from 'lucide-react';
 import {
   ArchivedMonth,
   BudgetConfig,
@@ -710,19 +710,52 @@ export default function App() {
         </div>
       </main>
 
-      {/* Quiet Footer */}
-      <footer className="relative z-10 border-t border-white/10 bg-[#091B23]/70 mt-8">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-xs text-slate-300 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p>
-            Pounds &amp; Paisa · Active Month: {config.monthLabel}
-          </p>
-          <button
-            type="button"
-            onClick={() => setIsLimitsModalOpen(true)}
-            className="text-left sm:text-right text-slate-200 hover:text-white underline underline-offset-4"
-          >
-            Edit Budget & Savings Limit
-          </button>
+      {/* Production Infrastructure & Hosting Footer */}
+      <footer className="relative z-10 border-t border-white/10 bg-[#091B23]/80 mt-10 backdrop-blur-md">
+        <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-xs text-slate-300">
+            <div>
+              <div className="flex items-center gap-2 font-medium text-slate-200">
+                <span>Pounds &amp; Paisa</span>
+                <span className="text-slate-500">·</span>
+                <span>Active Month: {config.monthLabel}</span>
+              </div>
+              <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-200 font-medium">
+                  <svg className="w-2.5 h-2.5 fill-current text-white shrink-0" viewBox="0 0 1155 1000">
+                    <path d="m577.3 0 577.4 1000H0z" />
+                  </svg>
+                  Hosted on Vercel
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-medium">
+                  <Database className="w-3 h-3 text-emerald-400 shrink-0" />
+                  Supabase PostgreSQL
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-300 font-medium">
+                  <Sparkles className="w-3 h-3 text-teal-400 shrink-0" />
+                  Gemini Vision OCR
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsAuthModalOpen(true)}
+                className="text-xs text-teal-400 hover:text-teal-300 underline underline-offset-4"
+              >
+                Cloud Sync &amp; Auth
+              </button>
+              <span className="text-slate-600">|</span>
+              <button
+                type="button"
+                onClick={() => setIsLimitsModalOpen(true)}
+                className="text-xs text-slate-300 hover:text-white underline underline-offset-4"
+              >
+                Budget &amp; Savings Limit
+              </button>
+            </div>
+          </div>
         </div>
       </footer>
 

@@ -3,11 +3,14 @@ import {
   Cloud,
   Database,
   ExternalLink,
+  Globe,
   Key,
   Lock,
   LogOut,
   Mail,
+  Server,
   ShieldCheck,
+  Sparkles,
   UploadCloud,
   DownloadCloud,
   User,
@@ -411,6 +414,37 @@ export function AuthModal({
             )}
           </div>
         )}
+
+        {/* Hosting & Architecture Footer Card */}
+        <div className="mt-6 pt-4 border-t border-white/10 flex flex-col gap-2 text-[11px] text-slate-400">
+          <div className="flex items-center justify-between font-semibold text-slate-300">
+            <span className="flex items-center gap-1.5">
+              <Server className="w-3.5 h-3.5 text-teal-400" />
+              Production Architecture
+            </span>
+            <span className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">
+              Vercel + Supabase
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+            <div className="p-2 rounded-lg bg-black/30 border border-white/5 space-y-0.5">
+              <span className="text-slate-400 block text-[10px] uppercase font-semibold">Frontend Hosting</span>
+              <span className="text-white font-medium flex items-center gap-1">
+                <svg className="w-2.5 h-2.5 fill-current text-white shrink-0" viewBox="0 0 1155 1000">
+                  <path d="m577.3 0 577.4 1000H0z" />
+                </svg>
+                Vercel Edge Network
+              </span>
+            </div>
+            <div className="p-2 rounded-lg bg-black/30 border border-white/5 space-y-0.5">
+              <span className="text-slate-400 block text-[10px] uppercase font-semibold">Database &amp; Auth</span>
+              <span className="text-emerald-400 font-medium flex items-center gap-1">
+                <Database className="w-3 h-3 shrink-0" />
+                Supabase Postgres
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
