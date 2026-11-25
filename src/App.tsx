@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Cloud, Plus, RefreshCw } from 'lucide-react';
 import {
   ArchivedMonth,
   BudgetConfig,
@@ -25,6 +25,9 @@ import { IncomeModal } from './components/IncomeModal';
 import { BudgetLimitsModal } from './components/BudgetLimitsModal';
 import { ArchiveFolderModal } from './components/ArchiveFolderModal';
 import { ReceiptScannerModal } from './components/ReceiptScannerModal';
+import { AuthModal } from './components/AuthModal';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
+import { supabaseService } from './services/supabaseService';
 
 const STORAGE_EXPENSES_KEY = 'poundwise_uk_expenses_v4';
 const STORAGE_INCOMES_KEY = 'poundwise_uk_incomes_v4';
@@ -132,9 +135,50 @@ export default function App() {
   const [isLimitsModalOpen, setIsLimitsModalOpen] = useState(false);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
 
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const isProgrammaticScroll = useRef(false);
+
+  const loadCloudData = useCallback(async (userId: string) => {
+    setIsCloudSyncing(true);
+    try {
+      const cloud = await supabaseService.fetchUserData(userId);
+      if (cloud) {
+        if (cloud.expenses.length > 0) setExpenses(cloud.expenses);
+        if (cloud.incomes.length > 0) setIncomes(cloud.incomes);
+        if (cloud.config) setConfig(cloud.config);
+        if (cloud.archives.length > 0) setArchives(cloud.archives);
+        if (cloud.supermarkets.length > 0) {
+          setSupermarkets((prev) => Array.from(new Set([...prev, ...cloud.supermarkets])));
+        }
+      }
+    } finally {
+      setIsCloudSyncing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!supabase || !isSupabaseConfigured()) return;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user ?? null;
+      setCurrentUser(user);
+      if (user) loadCloudData(user.id);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null;
+      setCurrentUser(user);
+      if (user) loadCloudData(user.id);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [loadCloudData]);
 
   useEffect(() => {
     try {
@@ -238,7 +282,8 @@ export default function App() {
         isIncomeModalOpen ||
         isLimitsModalOpen ||
         isArchiveModalOpen ||
-        isScannerModalOpen
+        isScannerModalOpen ||
+        isAuthModalOpen
       ) {
         return;
       }
@@ -286,17 +331,25 @@ export default function App() {
   };
 
   const handleSaveExpense = (data: Omit<ExpenseItem, 'id'>, existingId?: string) => {
+    const targetId = existingId || `exp-${Date.now()}`;
+    const item: ExpenseItem = { ...data, id: targetId };
     if (existingId) {
       setExpenses((prev) =>
-        prev.map((item) => (item.id === existingId ? { ...data, id: existingId } : item))
+        prev.map((i) => (i.id === existingId ? item : i))
       );
     } else {
-      setExpenses((prev) => [{ ...data, id: `exp-${Date.now()}` }, ...prev]);
+      setExpenses((prev) => [item, ...prev]);
+    }
+    if (currentUser) {
+      supabaseService.upsertExpense(currentUser.id, item);
     }
   };
 
   const handleDeleteExpense = (id: string) => {
     setExpenses((prev) => prev.filter((item) => item.id !== id));
+    if (currentUser) {
+      supabaseService.deleteExpense(currentUser.id, id);
+    }
   };
 
   const handleAddSupermarket = (name: string) => {
@@ -306,6 +359,9 @@ export default function App() {
       if (prev.some((s) => s.toLowerCase() === clean.toLowerCase())) return prev;
       return [...prev, clean];
     });
+    if (currentUser) {
+      supabaseService.addSupermarket(currentUser.id, clean);
+    }
   };
 
   const handleOpenIncomeModal = (income?: IncomeItem) => {
@@ -314,17 +370,25 @@ export default function App() {
   };
 
   const handleSaveIncome = (data: Omit<IncomeItem, 'id'>, existingId?: string) => {
+    const targetId = existingId || `inc-${Date.now()}`;
+    const item: IncomeItem = { ...data, id: targetId };
     if (existingId) {
       setIncomes((prev) =>
-        prev.map((item) => (item.id === existingId ? { ...data, id: existingId } : item))
+        prev.map((i) => (i.id === existingId ? item : i))
       );
     } else {
-      setIncomes((prev) => [{ ...data, id: `inc-${Date.now()}` }, ...prev]);
+      setIncomes((prev) => [item, ...prev]);
+    }
+    if (currentUser) {
+      supabaseService.upsertIncome(currentUser.id, item);
     }
   };
 
   const handleDeleteIncome = (id: string) => {
     setIncomes((prev) => prev.filter((item) => item.id !== id));
+    if (currentUser) {
+      supabaseService.deleteIncome(currentUser.id, id);
+    }
   };
 
   const handleArchiveCurrentMonth = (nextMonthLabel: string) => {
@@ -339,7 +403,15 @@ export default function App() {
     setArchives((prev) => [newFolder, ...prev]);
     setExpenses([]);
     setIncomes([]);
-    setConfig((prev) => ({ ...prev, monthLabel: nextMonthLabel }));
+    const updatedConfig = { ...config, monthLabel: nextMonthLabel };
+    setConfig(updatedConfig);
+
+    if (currentUser) {
+      supabaseService.saveArchive(currentUser.id, newFolder);
+      supabaseService.saveBudgetConfig(currentUser.id, updatedConfig);
+      expenses.forEach((e) => supabaseService.deleteExpense(currentUser.id, e.id));
+      incomes.forEach((i) => supabaseService.deleteIncome(currentUser.id, i.id));
+    }
   };
 
   const handleResetDemo = () => {
@@ -349,6 +421,9 @@ export default function App() {
     setArchives(INITIAL_ARCHIVES);
     setConfig(DEFAULT_BUDGET_CONFIG);
     refreshTodayFxRate();
+    if (currentUser) {
+      supabaseService.clearAllUserData(currentUser.id);
+    }
   };
 
   return (
@@ -390,7 +465,36 @@ export default function App() {
             ))}
           </nav>
 
-          <div className="flex items-center shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsAuthModalOpen(true)}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition border ${
+                currentUser
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
+                  : isSupabaseConfigured()
+                  ? 'border-teal-500/40 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20'
+                  : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
+              }`}
+              title={
+                currentUser
+                  ? `Logged in: ${currentUser.email}`
+                  : isSupabaseConfigured()
+                  ? 'Sign in to sync with Supabase'
+                  : 'Supabase setup / local mode'
+              }
+            >
+              <Cloud
+                className={`h-3.5 w-3.5 ${
+                  currentUser ? 'text-emerald-400' : 'text-teal-400'
+                } ${isCloudSyncing ? 'animate-pulse' : ''}`}
+              />
+              <span className="hidden sm:inline">
+                {currentUser ? 'Cloud Synced' : isSupabaseConfigured() ? 'Cloud Sync' : 'Local Mode'}
+              </span>
+              {currentUser && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+            </button>
+
             <button
               type="button"
               onClick={handleOpenAddModal}
@@ -531,7 +635,13 @@ export default function App() {
               showInr={showInr}
               supermarkets={supermarkets}
               onAddSupermarket={handleAddSupermarket}
-              onUpdateCap={(cap) => setConfig((prev) => ({ ...prev, groceriesCapGBP: cap }))}
+              onUpdateCap={(cap) => {
+                setConfig((prev) => {
+                  const updated = { ...prev, groceriesCapGBP: cap };
+                  if (currentUser) supabaseService.saveBudgetConfig(currentUser.id, updated);
+                  return updated;
+                });
+              }}
               onEditExpense={handleEditExpense}
               onDeleteExpense={handleDeleteExpense}
             />
@@ -550,7 +660,13 @@ export default function App() {
               capGBP={config.travelCapGBP}
               config={config}
               showInr={showInr}
-              onUpdateCap={(cap) => setConfig((prev) => ({ ...prev, travelCapGBP: cap }))}
+              onUpdateCap={(cap) => {
+                setConfig((prev) => {
+                  const updated = { ...prev, travelCapGBP: cap };
+                  if (currentUser) supabaseService.saveBudgetConfig(currentUser.id, updated);
+                  return updated;
+                });
+              }}
               onEditExpense={handleEditExpense}
               onDeleteExpense={handleDeleteExpense}
             />
@@ -562,7 +678,13 @@ export default function App() {
               expenses={expenses}
               config={config}
               showInr={showInr}
-              onUpdateCap={(cap) => setConfig((prev) => ({ ...prev, universityCapGBP: cap }))}
+              onUpdateCap={(cap) => {
+                setConfig((prev) => {
+                  const updated = { ...prev, universityCapGBP: cap };
+                  if (currentUser) supabaseService.saveBudgetConfig(currentUser.id, updated);
+                  return updated;
+                });
+              }}
               onEditExpense={handleEditExpense}
               onDeleteExpense={handleDeleteExpense}
             />
@@ -574,7 +696,13 @@ export default function App() {
               expenses={expenses}
               config={config}
               showInr={showInr}
-              onUpdateCap={(cap) => setConfig((prev) => ({ ...prev, othersCapGBP: cap }))}
+              onUpdateCap={(cap) => {
+                setConfig((prev) => {
+                  const updated = { ...prev, othersCapGBP: cap };
+                  if (currentUser) supabaseService.saveBudgetConfig(currentUser.id, updated);
+                  return updated;
+                });
+              }}
               onEditExpense={handleEditExpense}
               onDeleteExpense={handleDeleteExpense}
             />
@@ -638,7 +766,12 @@ export default function App() {
         isOpen={isLimitsModalOpen}
         config={config}
         onClose={() => setIsLimitsModalOpen(false)}
-        onSave={setConfig}
+        onSave={(newConfig) => {
+          setConfig(newConfig);
+          if (currentUser) {
+            supabaseService.saveBudgetConfig(currentUser.id, newConfig);
+          }
+        }}
         onResetDemo={handleResetDemo}
       />
 
@@ -650,6 +783,39 @@ export default function App() {
         currentRate={config.gbpToInrRate}
         onClose={() => setIsArchiveModalOpen(false)}
         onArchiveCurrentMonth={handleArchiveCurrentMonth}
+      />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        currentUser={currentUser}
+        onUserChange={(user) => {
+          setCurrentUser(user);
+          if (user) {
+            loadCloudData(user.id);
+          }
+        }}
+        onSyncPush={
+          currentUser
+            ? async () => {
+                await supabaseService.migrateLocalData(currentUser.id, {
+                  expenses,
+                  incomes,
+                  config,
+                  archives,
+                  supermarkets,
+                });
+              }
+            : undefined
+        }
+        onSyncPull={
+          currentUser
+            ? async () => {
+                await loadCloudData(currentUser.id);
+              }
+            : undefined
+        }
+        hasLocalData={expenses.length > 0 || incomes.length > 0}
       />
     </div>
   );
