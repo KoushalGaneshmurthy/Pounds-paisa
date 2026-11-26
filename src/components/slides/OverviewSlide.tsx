@@ -49,35 +49,22 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
   onOpenArchiveModal,
   onJumpToSlide,
 }) => {
-  // Exclude separate/one-off University costs (e.g. tuition/visa) from monthly living budget
-  const monthlyExpenses = useMemo(
-    () =>
-      expenses.filter(
-        (e) => !(e.category === 'university' && e.universityScope === 'separate')
-      ),
-    [expenses]
-  );
-
   const totals = useMemo(() => {
-    const totalSpent = monthlyExpenses.reduce((sum, e) => sum + e.amountGBP, 0);
+    const totalSpent = expenses.reduce((sum, e) => sum + e.amountGBP, 0);
     const totalSalary = incomes.reduce((sum, i) => sum + i.amountGBP, 0);
     const totalMonthlyFunds = config.monthlyAllowanceGBP + totalSalary;
 
-    const groceries = monthlyExpenses
+    const groceries = expenses
       .filter((e) => e.category === 'groceries')
       .reduce((sum, e) => sum + e.amountGBP, 0);
-    const travel = monthlyExpenses
+    const travel = expenses
       .filter((e) => e.category === 'travel')
       .reduce((sum, e) => sum + e.amountGBP, 0);
-    const others = monthlyExpenses
+    const others = expenses
       .filter((e) => e.category === 'others')
       .reduce((sum, e) => sum + e.amountGBP, 0);
-    const universityMonthly = monthlyExpenses
+    const universityMonthly = expenses
       .filter((e) => e.category === 'university')
-      .reduce((sum, e) => sum + e.amountGBP, 0);
-
-    const universitySeparate = expenses
-      .filter((e) => e.category === 'university' && e.universityScope === 'separate')
       .reduce((sum, e) => sum + e.amountGBP, 0);
 
     const spendableCeiling = Math.max(0, totalMonthlyFunds - config.savingsGoalGBP);
@@ -92,18 +79,15 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
       travel,
       others,
       universityMonthly,
-      universitySeparate,
       spendableCeiling,
       safeRemaining,
       totalRemainingWithSavings,
     };
-  }, [monthlyExpenses, expenses, incomes, config]);
+  }, [expenses, incomes, config]);
 
   const lastMonthSpent = useMemo(() => {
     if (!lastMonthArchive) return 0;
-    return lastMonthArchive.expenses
-      .filter((e) => !(e.category === 'university' && e.universityScope === 'separate'))
-      .reduce((s, e) => s + e.amountGBP, 0);
+    return lastMonthArchive.expenses.reduce((s, e) => s + e.amountGBP, 0);
   }, [lastMonthArchive]);
 
   const statusInfo = useMemo(() => {
@@ -317,23 +301,6 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
             );
           })}
         </div>
-
-        {totals.universitySeparate > 0 && (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-indigo-200/70 bg-indigo-50/60 px-4 py-2.5 text-xs text-indigo-950">
-            <span>
-              Separate University ledger (Tuition, Visa & One-Off):{' '}
-              <strong className="font-mono-num">{formatGBP(totals.universitySeparate)}</strong>{' '}
-              excluded from monthly living budget
-            </span>
-            <button
-              type="button"
-              onClick={() => onJumpToSlide(3)}
-              className="font-semibold text-indigo-800 hover:text-indigo-950 underline underline-offset-4 whitespace-nowrap"
-            >
-              View University Slide →
-            </button>
-          </div>
-        )}
       </section>
 
       {/* Part-Time Salary & Income + Last Month Reference */}
@@ -471,7 +438,7 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
       <PostScrollFeed
         title="Expenditure Post Scroll"
         subtitle={`Active month (${config.monthLabel}) · Edit or remove entries anytime`}
-        expenses={monthlyExpenses}
+        expenses={expenses}
         onEditExpense={onEditExpense}
         onDeleteExpense={onDeleteExpense}
         showInr={showInr}

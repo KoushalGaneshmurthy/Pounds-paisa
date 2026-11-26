@@ -1,13 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Pencil, Check } from 'lucide-react';
-import {
-  BudgetConfig,
-  ExpenseItem,
-  UniversityScope,
-  UniversitySubCategory,
-} from '../../types/expense';
-import { SLIDE_IMAGES, UNIVERSITY_SUBCATEGORIES } from '../../data/initialData';
-import { formatGBP, formatINR } from '../../utils/formatters';
+import { BudgetConfig, ExpenseItem } from '../../types/expense';
+import { SLIDE_IMAGES } from '../../data/initialData';
+import { formatGBP } from '../../utils/formatters';
 import { BannerCard } from '../BannerCard';
 import { PostScrollFeed } from '../PostScrollFeed';
 
@@ -28,8 +23,6 @@ export const UniversitySlide: React.FC<UniversitySlideProps> = ({
   onEditExpense,
   onDeleteExpense,
 }) => {
-  const [scopeFilter, setScopeFilter] = useState<UniversityScope | 'all'>('all');
-  const [subCatFilter, setSubCatFilter] = useState<UniversitySubCategory | 'all'>('all');
   const [isEditingCap, setIsEditingCap] = useState(false);
   const [capDraft, setCapDraft] = useState(String(config.universityCapGBP));
 
@@ -38,32 +31,12 @@ export const UniversitySlide: React.FC<UniversitySlideProps> = ({
     [expenses]
   );
 
-  const monthlyUniSpent = useMemo(
-    () =>
-      universityExpenses
-        .filter((e) => e.universityScope !== 'separate')
-        .reduce((s, e) => s + e.amountGBP, 0),
+  const totalUniSpent = useMemo(
+    () => universityExpenses.reduce((s, e) => s + e.amountGBP, 0),
     [universityExpenses]
   );
 
-  const separateUniSpent = useMemo(
-    () =>
-      universityExpenses
-        .filter((e) => e.universityScope === 'separate')
-        .reduce((s, e) => s + e.amountGBP, 0),
-    [universityExpenses]
-  );
-
-  const visibleExpenses = useMemo(() => {
-    return universityExpenses.filter((e) => {
-      if (scopeFilter === 'monthly' && e.universityScope === 'separate') return false;
-      if (scopeFilter === 'separate' && e.universityScope !== 'separate') return false;
-      if (subCatFilter !== 'all' && e.universitySubCategory !== subCatFilter) return false;
-      return true;
-    });
-  }, [universityExpenses, scopeFilter, subCatFilter]);
-
-  const remaining = config.universityCapGBP - monthlyUniSpent;
+  const remaining = config.universityCapGBP - totalUniSpent;
   const statusTone =
     config.universityCapGBP <= 0
       ? 'good'
@@ -77,20 +50,8 @@ export const UniversitySlide: React.FC<UniversitySlideProps> = ({
     config.universityCapGBP <= 0
       ? 'No monthly cap set · Use Edit Cap to set a limit'
       : remaining < 0
-        ? `Over Monthly Study Cap · ${formatGBP(Math.abs(remaining))} above cap`
-        : `Within Monthly Study Cap · ${formatGBP(remaining)} left`;
-
-  const subCatTotals = useMemo(() => {
-    return UNIVERSITY_SUBCATEGORIES.map((meta) => {
-      const items = universityExpenses.filter((e) => e.universitySubCategory === meta.id);
-      const amount = items.reduce((s, e) => s + e.amountGBP, 0);
-      return {
-        ...meta,
-        amount,
-        count: items.length,
-      };
-    });
-  }, [universityExpenses]);
+        ? `Over University Cap · ${formatGBP(Math.abs(remaining))} above cap`
+        : `Within University Cap · ${formatGBP(remaining)} left`;
 
   const handleSaveCap = () => {
     const parsed = parseFloat(capDraft);
@@ -107,11 +68,9 @@ export const UniversitySlide: React.FC<UniversitySlideProps> = ({
         imageAlt="Historic British university library reading room with oak desks and warm study lamps"
         sectionIndex="Slide 04 of 05 · University"
         title="University"
-        subtitle="Track both monthly study expenses and separate one-off costs like tuition, visa, or lab gear."
-        primaryLabel="Monthly Study"
-        primaryAmountGBP={monthlyUniSpent}
-        secondaryLabel="Separate / One-Off"
-        secondaryAmountGBP={separateUniSpent}
+        subtitle="Track your tuition, books, printing, societies, and study expenses."
+        primaryLabel="Total Spent"
+        primaryAmountGBP={totalUniSpent}
         limitLabel="Monthly Cap"
         limitAmountGBP={config.universityCapGBP}
         statusText={statusText}
@@ -136,7 +95,7 @@ export const UniversitySlide: React.FC<UniversitySlideProps> = ({
       {isEditingCap && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-300 bg-white px-5 py-3.5">
           <span className="text-xs font-medium text-slate-700">
-            Update Monthly University Study Cap (£)
+            Update Monthly University Cap (£)
           </span>
           <div className="flex items-center gap-2">
             <input
@@ -159,83 +118,15 @@ export const UniversitySlide: React.FC<UniversitySlideProps> = ({
         </div>
       )}
 
-      {/* Scope Toggle + 6 University Category Tiles */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
-          <div className="flex items-center gap-1.5 rounded-xl bg-slate-100 p-1">
-            {(
-              [
-                { id: 'all', label: 'All University' },
-                { id: 'monthly', label: 'Monthly Budget' },
-                { id: 'separate', label: 'Separate / One-Off' },
-              ] as const
-            ).map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setScopeFilter(tab.id)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
-                  scopeFilter === tab.id
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {subCatFilter !== 'all' && (
-            <button
-              type="button"
-              onClick={() => setSubCatFilter('all')}
-              className="text-xs font-medium text-teal-700 hover:text-teal-900 underline underline-offset-4 whitespace-nowrap shrink-0"
-            >
-              Show all categories
-            </button>
-          )}
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {subCatTotals.map((sub) => {
-            const active = subCatFilter === sub.id;
-            return (
-              <button
-                key={sub.id}
-                type="button"
-                onClick={() => setSubCatFilter(active ? 'all' : sub.id)}
-                className={`text-left rounded-xl border p-3.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-700 ${
-                  active
-                    ? 'border-slate-900 bg-slate-50'
-                    : 'border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                }`}
-              >
-                <p className="text-xs font-semibold text-slate-900 truncate">
-                  {sub.label}
-                </p>
-                <p className="font-mono-num mt-1.5 text-base font-bold text-slate-900">
-                  {formatGBP(sub.amount)}
-                </p>
-                {showInr && config.gbpToInrRate > 0 && (
-                  <p className="font-mono-num mt-0.5 text-[11px] text-slate-500">
-                    {formatINR(sub.amount, config.gbpToInrRate)}
-                  </p>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
       <PostScrollFeed
         title="University Ledger"
-        subtitle="Monthly study spend and separate tuition, visa, or equipment entries"
-        expenses={visibleExpenses}
+        subtitle="All university & study expense entries"
+        expenses={universityExpenses}
         onEditExpense={onEditExpense}
         onDeleteExpense={onDeleteExpense}
         showInr={showInr}
         gbpToInrRate={config.gbpToInrRate}
-        emptyMessage="No university expenses for this filter yet."
+        emptyMessage="No university expenses yet."
       />
     </div>
   );

@@ -9,8 +9,8 @@ interface BannerCardProps {
   subtitle: string;
   primaryLabel: string;
   primaryAmountGBP: number;
-  secondaryLabel: string;
-  secondaryAmountGBP: number;
+  secondaryLabel?: string;
+  secondaryAmountGBP?: number;
   limitLabel: string;
   limitAmountGBP: number;
   statusText: string;
@@ -81,7 +81,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end lg:gap-8">
-          <div className="grid grid-cols-3 gap-5 sm:gap-7">
+          <div className={`grid ${secondaryLabel ? 'grid-cols-3' : 'grid-cols-2'} gap-5 sm:gap-7`}>
             <div>
               <p className="text-xs text-slate-300">{primaryLabel}</p>
               <p className="font-mono-num mt-1 text-xl font-semibold text-white sm:text-2xl">
@@ -94,17 +94,19 @@ export const BannerCard: React.FC<BannerCardProps> = ({
               )}
             </div>
 
-            <div>
-              <p className="text-xs text-slate-300">{secondaryLabel}</p>
-              <p className="font-mono-num mt-1 text-xl font-semibold text-white sm:text-2xl">
-                {formatGBP(secondaryAmountGBP)}
-              </p>
-              {showInr && gbpToInrRate > 0 && (
-                <p className="font-mono-num text-xs text-slate-300/85">
-                  {formatINR(secondaryAmountGBP, gbpToInrRate)}
+            {secondaryLabel && typeof secondaryAmountGBP === 'number' && (
+              <div>
+                <p className="text-xs text-slate-300">{secondaryLabel}</p>
+                <p className="font-mono-num mt-1 text-xl font-semibold text-white sm:text-2xl">
+                  {formatGBP(secondaryAmountGBP)}
                 </p>
-              )}
-            </div>
+                {showInr && gbpToInrRate > 0 && (
+                  <p className="font-mono-num text-xs text-slate-300/85">
+                    {formatINR(secondaryAmountGBP, gbpToInrRate)}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div>
               <p className="text-xs text-slate-300">{limitLabel}</p>

@@ -89,11 +89,7 @@ export const PostScrollFeed: React.FC<PostScrollFeedProps> = ({
     if (item.category === 'groceries') return 'Groceries';
     if (item.category === 'travel') return 'Travel';
     if (item.category === 'university') {
-      const sub = item.universitySubCategory
-        ? subCategoryLabelMap[item.universitySubCategory]
-        : 'University';
-      const scope = item.universityScope === 'separate' ? 'Separate' : 'Monthly';
-      return `${sub} · ${scope}`;
+      return 'University';
     }
     return item.subCategory ? subCategoryLabelMap[item.subCategory] || 'Others' : 'Others';
   };

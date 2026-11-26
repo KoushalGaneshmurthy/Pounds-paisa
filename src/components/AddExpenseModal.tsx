@@ -4,14 +4,9 @@ import {
   ExpenseCategory,
   ExpenseItem,
   OtherSubCategory,
-  UniversityScope,
-  UniversitySubCategory,
   WeekNumber,
 } from '../types/expense';
-import {
-  OTHER_SUBCATEGORIES,
-  UNIVERSITY_SUBCATEGORIES,
-} from '../data/initialData';
+import { OTHER_SUBCATEGORIES } from '../data/initialData';
 import { formatINR } from '../utils/formatters';
 import { fetchDailyGbpToInrRate } from '../utils/fxRate';
 
@@ -43,9 +38,6 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const [merchant, setMerchant] = useState('');
   const [category, setCategory] = useState<ExpenseCategory>(defaultCategory);
   const [subCategory, setSubCategory] = useState<OtherSubCategory>('dining_coffee');
-  const [universityScope, setUniversityScope] = useState<UniversityScope>('monthly');
-  const [universitySubCategory, setUniversitySubCategory] =
-    useState<UniversitySubCategory>('books_printing');
   const [amountGBP, setAmountGBP] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState('');
@@ -64,8 +56,6 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       setMerchant(editingExpense.merchant);
       setCategory(editingExpense.category);
       setSubCategory(editingExpense.subCategory ?? 'dining_coffee');
-      setUniversityScope(editingExpense.universityScope ?? 'monthly');
-      setUniversitySubCategory(editingExpense.universitySubCategory ?? 'books_printing');
       setAmountGBP(String(editingExpense.amountGBP));
       setDate(editingExpense.date);
       setNotes(editingExpense.notes ?? '');
@@ -78,8 +68,6 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           : ''
       );
       setSubCategory('dining_coffee');
-      setUniversityScope('monthly');
-      setUniversitySubCategory('books_printing');
       setAmountGBP('');
       const todayIso = new Date().toISOString().slice(0, 10);
       setDate(todayIso);
@@ -116,8 +104,13 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!merchant.trim()) {
-      setError('Please enter or choose where you spent.');
+    const finalMerchant = merchant.trim();
+    if (!finalMerchant) {
+      setError(
+        category === 'university'
+          ? 'Please enter the expense name.'
+          : 'Please enter or choose where you spent.'
+      );
       return;
     }
     if (parsedAmount <= 0) {
@@ -131,14 +124,11 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
     onSave(
       {
-        title: merchant.trim(),
-        merchant: merchant.trim(),
+        title: finalMerchant,
+        merchant: finalMerchant,
         location: '',
         category,
         subCategory: category === 'others' ? subCategory : undefined,
-        universityScope: category === 'university' ? universityScope : undefined,
-        universitySubCategory:
-          category === 'university' ? universitySubCategory : undefined,
         amountGBP: Math.round(parsedAmount * 100) / 100,
         paymentMethod: editingExpense?.paymentMethod || 'Monzo Debit',
         week: editingExpense?.week || computedWeek,
@@ -251,84 +241,8 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             </div>
           )}
 
-          {category === 'university' && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label htmlFor="uni-sub-cat" className="block text-xs font-medium text-slate-700 mb-1.5">
-                  University Category
-                </label>
-                <select
-                  id="uni-sub-cat"
-                  value={universitySubCategory}
-                  onChange={(e) =>
-                    setUniversitySubCategory(e.target.value as UniversitySubCategory)
-                  }
-                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                >
-                  {UNIVERSITY_SUBCATEGORIES.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Budget Scope
-                </label>
-                <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setUniversityScope('monthly')}
-                    className={`rounded-lg py-1.5 text-xs font-medium transition-colors ${
-                      universityScope === 'monthly'
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-600'
-                    }`}
-                  >
-                    This Month
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setUniversityScope('separate')}
-                    className={`rounded-lg py-1.5 text-xs font-medium transition-colors ${
-                      universityScope === 'separate'
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-600'
-                    }`}
-                  >
-                    Separate / One-Off
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Amount */}
-          <div>
-            <label htmlFor="exp-amount" className="block text-xs font-medium text-slate-700 mb-1.5">
-              How Much (£)
-            </label>
-            <input
-              id="exp-amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              value={amountGBP}
-              onChange={(e) => setAmountGBP(e.target.value)}
-              placeholder="e.g. 24.50"
-              className="font-mono-num h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-              required
-            />
-            {parsedAmount > 0 && dayRate > 0 && (
-              <p className="font-mono-num mt-1 text-[11px] text-slate-500">
-                {formatINR(parsedAmount, dayRate)}
-              </p>
-            )}
-          </div>
-
-          {category === 'groceries' ? (
+          {/* Category-specific placement / name */}
+          {category === 'groceries' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label htmlFor="exp-supermarket" className="block text-xs font-medium text-slate-700">
@@ -383,7 +297,26 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 )}
               </select>
             </div>
-          ) : (
+          )}
+
+          {category === 'university' && (
+            <div>
+              <label htmlFor="exp-uni-name" className="block text-xs font-medium text-slate-700 mb-1.5">
+                Expense Name
+              </label>
+              <input
+                id="exp-uni-name"
+                type="text"
+                value={merchant}
+                onChange={(e) => setMerchant(e.target.value)}
+                placeholder="e.g. Tuition fee, Library printing, Textbooks, Student visa"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+                required
+              />
+            </div>
+          )}
+
+          {(category === 'travel' || category === 'others') && (
             <div>
               <label htmlFor="exp-merchant" className="block text-xs font-medium text-slate-700 mb-1.5">
                 Where (Place / Portal)
@@ -393,44 +326,72 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 type="text"
                 value={merchant}
                 onChange={(e) => setMerchant(e.target.value)}
-                placeholder={
-                  category === 'travel'
-                    ? 'e.g. TfL Tube, Uber'
-                    : category === 'university'
-                      ? 'e.g. University Portal, Library'
-                      : 'e.g. Lebara, Pret'
-                }
+                placeholder={category === 'travel' ? 'e.g. TfL Tube, Uber, National Rail' : 'e.g. Lebara, Pret, Landlord'}
                 className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
                 required
               />
             </div>
           )}
 
-          <div>
-            <label htmlFor="exp-date" className="block text-xs font-medium text-slate-700 mb-1.5">
-              Date
-            </label>
-            <input
-              id="exp-date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-            />
-          </div>
+          {/* Meaningful Items Bought field moved up right after place */}
+          {category !== 'university' && (
+            <div>
+              <label htmlFor="exp-notes" className="block text-xs font-medium text-slate-700 mb-1.5">
+                Items Bought
+              </label>
+              <input
+                id="exp-notes"
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={
+                  category === 'groceries'
+                    ? 'e.g. Bread, milk, eggs, bananas, vegetables'
+                    : category === 'travel'
+                      ? 'e.g. Zone 1–2 return, Central Line to campus'
+                      : 'e.g. Monthly rent, SIM 30GB plan, Flat white & lunch'
+                }
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+              />
+            </div>
+          )}
 
-          <div>
-            <label htmlFor="exp-notes" className="block text-xs font-medium text-slate-700 mb-1.5">
-              Items bought / note (optional)
-            </label>
-            <input
-              id="exp-notes"
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Milk, basmati rice, or module handbook"
-              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-            />
+          {/* Amount and Date row */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="exp-amount" className="block text-xs font-medium text-slate-700 mb-1.5">
+                How Much (£)
+              </label>
+              <input
+                id="exp-amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={amountGBP}
+                onChange={(e) => setAmountGBP(e.target.value)}
+                placeholder="e.g. 24.50"
+                className="font-mono-num h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+                required
+              />
+              {parsedAmount > 0 && dayRate > 0 && (
+                <p className="font-mono-num mt-1 text-[11px] text-slate-500">
+                  {formatINR(parsedAmount, dayRate)}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="exp-date" className="block text-xs font-medium text-slate-700 mb-1.5">
+                Date
+              </label>
+              <input
+                id="exp-date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+              />
+            </div>
           </div>
 
           {error && (

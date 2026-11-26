@@ -303,9 +303,6 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
       location: '',
       category,
       subCategory: category === 'others' ? subCategory : undefined,
-      universityScope: category === 'university' ? universityScope : undefined,
-      universitySubCategory:
-        category === 'university' ? universitySubCategory : undefined,
       amountGBP: Math.round(parsedAmount * 100) / 100,
       paymentMethod: 'Monzo Debit',
       week: inferWeekFromDate(date),
@@ -522,52 +519,25 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
                 </div>
               )}
 
-              {category === 'university' && (
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      University Category
-                    </label>
-                    <select
-                      value={universitySubCategory}
-                      onChange={(e) =>
-                        setUniversitySubCategory(e.target.value as UniversitySubCategory)
-                      }
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-900"
-                    >
-                      {UNIVERSITY_SUBCATEGORIES.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Scope
-                    </label>
-                    <select
-                      value={universityScope}
-                      onChange={(e) =>
-                        setUniversityScope(e.target.value as UniversityScope)
-                      }
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-900"
-                    >
-                      <option value="monthly">This Month</option>
-                      <option value="separate">Separate / One-Off</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Store / Supermarket
+                  {category === 'university'
+                    ? 'Expense Name'
+                    : category === 'groceries'
+                      ? 'Store / Supermarket'
+                      : 'Where / Place'}
                 </label>
                 <input
                   type="text"
                   value={merchant}
                   onChange={(e) => setMerchant(e.target.value)}
+                  placeholder={
+                    category === 'university'
+                      ? 'e.g. Tuition fee, Library printing'
+                      : category === 'groceries'
+                        ? 'e.g. Tesco, Aldi'
+                        : 'e.g. TfL, Pret'
+                  }
                   className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
                   required
                 />
@@ -577,6 +547,21 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
                   </p>
                 )}
               </div>
+
+              {category !== 'university' && (
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                    Items Bought
+                  </label>
+                  <input
+                    type="text"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="e.g. Bread, milk, snacks"
+                    className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-900 focus:border-slate-500 focus:outline-none"
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
@@ -610,18 +595,6 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
                     className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-900"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Items Summary
-                </label>
-                <input
-                  type="text"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-900 focus:border-slate-500 focus:outline-none"
-                />
               </div>
 
               {scanError && (
