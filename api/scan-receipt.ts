@@ -61,90 +61,118 @@ Rules:
 8. Items: Extract top line items if visible (name + price). Provide a concise human-readable itemsSummary (e.g. "Bread, Milk, Bananas & 3 more items").
 9. Location: City or neighborhood if printed on receipt (e.g. "Coventry", "London Kings Cross", "Manchester"), or empty string if not visible.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { text: systemPrompt },
-            {
-              inlineData: {
-                data: imageBase64,
-                mimeType: validMime,
-              },
+    const modelsToTry = [
+      'gemini-4-hydrogen',
+      'gemini-4-carbon',
+      'gemini-4-argon',
+      'gemini-3.8-flash',
+    ];
+
+    let response: any = null;
+    let lastError: any = null;
+
+    const requestContents = [
+      {
+        role: 'user',
+        parts: [
+          { text: systemPrompt },
+          {
+            inlineData: {
+              data: imageBase64,
+              mimeType: validMime,
             },
-          ],
-        },
-      ],
-      config: {
-        thinkingConfig: {
-          thinkingLevel: ThinkingLevel.LOW,
-        },
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            storeName: { type: Type.STRING },
-            location: { type: Type.STRING },
-            title: { type: Type.STRING },
-            date: { type: Type.STRING },
-            totalGBP: { type: Type.NUMBER },
-            category: {
-              type: Type.STRING,
-              enum: ['groceries', 'travel', 'university', 'others'],
-            },
-            subCategory: {
-              type: Type.STRING,
-              enum: [
-                'rent',
-                'utilities_sim',
-                'dining_coffee',
-                'laundry_care',
-                'subscriptions_forex',
-              ],
-            },
-            universityScope: {
-              type: Type.STRING,
-              enum: ['monthly', 'separate'],
-            },
-            universitySubCategory: {
-              type: Type.STRING,
-              enum: [
-                'tuition_fees',
-                'books_printing',
-                'visa_ihs',
-                'software_tech',
-                'societies_events',
-                'exams_grad',
-              ],
-            },
-            paymentMethod: {
-              type: Type.STRING,
-              enum: [
-                'Monzo Debit',
-                'Revolut Card',
-                'Niyo Forex (INR→GBP)',
-                'Oyster / Contactless',
-                'Cash GBP',
-              ],
-            },
-            itemsSummary: { type: Type.STRING },
+          },
+        ],
+      },
+    ];
+
+    const requestConfig = {
+      thinkingConfig: {
+        thinkingLevel: ThinkingLevel.LOW,
+      },
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          storeName: { type: Type.STRING },
+          location: { type: Type.STRING },
+          title: { type: Type.STRING },
+          date: { type: Type.STRING },
+          totalGBP: { type: Type.NUMBER },
+          category: {
+            type: Type.STRING,
+            enum: ['groceries', 'travel', 'university', 'others'],
+          },
+          subCategory: {
+            type: Type.STRING,
+            enum: [
+              'rent',
+              'utilities_sim',
+              'dining_coffee',
+              'laundry_care',
+              'subscriptions_forex',
+            ],
+          },
+          universityScope: {
+            type: Type.STRING,
+            enum: ['monthly', 'separate'],
+          },
+          universitySubCategory: {
+            type: Type.STRING,
+            enum: [
+              'tuition_fees',
+              'books_printing',
+              'visa_ihs',
+              'software_tech',
+              'societies_events',
+              'exams_grad',
+            ],
+          },
+          paymentMethod: {
+            type: Type.STRING,
+            enum: [
+              'Monzo Debit',
+              'Revolut Card',
+              'Niyo Forex (INR→GBP)',
+              'Oyster / Contactless',
+              'Cash GBP',
+            ],
+          },
+          itemsSummary: { type: Type.STRING },
+          items: {
+            type: Type.ARRAY,
             items: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  priceGBP: { type: Type.NUMBER },
-                },
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                priceGBP: { type: Type.NUMBER },
               },
             },
           },
-          required: ['storeName', 'totalGBP', 'category', 'date'],
         },
+        required: ['storeName', 'totalGBP', 'category', 'date'],
       },
-    });
+    };
+
+    for (const model of modelsToTry) {
+      try {
+        response = await ai.models.generateContent({
+          model,
+          contents: requestContents,
+          config: requestConfig,
+        });
+        if (response && response.text) {
+          break;
+        }
+      } catch (modelErr: any) {
+        lastError = modelErr;
+        console.warn(`Model ${model} failed, trying next:`, modelErr?.message || modelErr);
+      }
+    }
+
+    if (!response || !response.text) {
+      throw lastError || new Error('Could not analyze this receipt photo.');
+    }
 
     const parsedJson = JSON.parse(response.text?.trim() || '{}');
     if (Array.isArray(parsedJson.items)) {
@@ -165,6 +193,11 @@ Rules:
     if (message.includes('403') || message.includes('PERMISSION_DENIED') || message.includes('API_KEY_INVALID')) {
       return res.status(403).json({
         error: 'Invalid or unauthorized Gemini API key. Please check your Vercel Environment Variables.',
+      });
+    }
+    if (message.includes('429') || message.includes('RESOURCE_EXHAUSTED')) {
+      return res.status(429).json({
+        error: 'Gemini API rate limit reached. Please wait a moment and try again.',
       });
     }
     return res.status(500).json({

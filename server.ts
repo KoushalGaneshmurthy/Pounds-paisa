@@ -71,55 +71,77 @@ Extract:
 9. items: List of purchased line items with clean human-readable names and GBP price. Ignore subtotal/VAT/Clubcard summary lines.
 10. itemsSummary: A concise comma-separated summary of the main items bought (max 120 characters).`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-4-hydrogen',
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                mimeType: validMime,
-                data: imageBase64,
-              },
-            },
-            { text: prompt },
-          ],
+      const modelsToTry = [
+        'gemini-4-hydrogen',
+        'gemini-4-carbon',
+        'gemini-4-argon',
+        'gemini-3.8-flash',
+      ];
+
+      let response: any = null;
+      let lastError: any = null;
+
+      const requestParts = [
+        {
+          inlineData: {
+            mimeType: validMime,
+            data: imageBase64,
+          },
         },
-        config: {
-          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              storeName: { type: Type.STRING },
-              location: { type: Type.STRING },
-              title: { type: Type.STRING },
-              date: { type: Type.STRING },
-              totalGBP: { type: Type.NUMBER },
-              category: { type: Type.STRING },
-              subCategory: { type: Type.STRING },
-              paymentMethod: { type: Type.STRING },
-              itemsSummary: { type: Type.STRING },
+        { text: prompt },
+      ];
+
+      const requestConfig = {
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            storeName: { type: Type.STRING },
+            location: { type: Type.STRING },
+            title: { type: Type.STRING },
+            date: { type: Type.STRING },
+            totalGBP: { type: Type.NUMBER },
+            category: { type: Type.STRING },
+            subCategory: { type: Type.STRING },
+            paymentMethod: { type: Type.STRING },
+            itemsSummary: { type: Type.STRING },
+            items: {
+              type: Type.ARRAY,
               items: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    priceGBP: { type: Type.NUMBER },
-                  },
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  priceGBP: { type: Type.NUMBER },
                 },
               },
             },
           },
+          required: ['storeName', 'totalGBP', 'category', 'date'],
         },
-      });
+      };
 
-      const rawText = (response.text ?? '').trim();
-      if (!rawText) {
-        res.status(502).json({ error: 'Gemini returned an empty response for this receipt.' });
-        return;
+      for (const model of modelsToTry) {
+        try {
+          response = await ai.models.generateContent({
+            model,
+            contents: { parts: requestParts },
+            config: requestConfig,
+          });
+          if (response && response.text) {
+            break;
+          }
+        } catch (modelErr: any) {
+          lastError = modelErr;
+          console.warn(`Model ${model} failed, trying next:`, modelErr?.message || modelErr);
+        }
       }
 
+      if (!response || !response.text) {
+        throw lastError || new Error('Could not analyze this receipt.');
+      }
+
+      const rawText = (response.text ?? '').trim();
       const parsed = JSON.parse(rawText);
       res.json({ receipt: parsed });
     } catch (err: unknown) {
