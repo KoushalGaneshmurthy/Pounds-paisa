@@ -4,12 +4,10 @@ import {
   BudgetConfig,
   ExpenseItem,
   OtherSubCategory,
-  WeekNumber,
 } from '../../types/expense';
 import { OTHER_SUBCATEGORIES, SLIDE_IMAGES } from '../../data/initialData';
 import { formatGBP, formatINR } from '../../utils/formatters';
 import { BannerCard } from '../BannerCard';
-import { WeeklyBreakdown } from '../WeeklyBreakdown';
 import { PostScrollFeed } from '../PostScrollFeed';
 
 interface OthersSlideProps {
@@ -29,7 +27,6 @@ export const OthersSlide: React.FC<OthersSlideProps> = ({
   onEditExpense,
   onDeleteExpense,
 }) => {
-  const [selectedWeek, setSelectedWeek] = useState<WeekNumber | 'all'>('all');
   const [selectedSubCat, setSelectedSubCat] = useState<OtherSubCategory | 'all'>('all');
   const [isEditingCap, setIsEditingCap] = useState(false);
   const [capDraft, setCapDraft] = useState(String(config.othersCapGBP));
@@ -201,16 +198,6 @@ export const OthersSlide: React.FC<OthersSlideProps> = ({
         </div>
       </section>
 
-      <WeeklyBreakdown
-        expenses={filteredBySubCat}
-        selectedWeek={selectedWeek}
-        onSelectWeek={setSelectedWeek}
-        showInr={showInr}
-        gbpToInrRate={config.gbpToInrRate}
-        mode="single"
-        accentColorClass="bg-amber-600"
-      />
-
       <PostScrollFeed
         title="Others Feed"
         subtitle={
@@ -219,7 +206,6 @@ export const OthersSlide: React.FC<OthersSlideProps> = ({
             : `Filtered: ${OTHER_SUBCATEGORIES.find((s) => s.id === selectedSubCat)?.label}`
         }
         expenses={filteredBySubCat}
-        selectedWeek={selectedWeek}
         onEditExpense={onEditExpense}
         onDeleteExpense={onDeleteExpense}
         showInr={showInr}

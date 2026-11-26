@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Plus, Pencil, Check } from 'lucide-react';
-import { BudgetConfig, ExpenseItem, WeekNumber } from '../../types/expense';
+import { BudgetConfig, ExpenseItem } from '../../types/expense';
 import { formatGBP, formatINR } from '../../utils/formatters';
 import { BannerCard } from '../BannerCard';
-import { WeeklyBreakdown } from '../WeeklyBreakdown';
 import { PostScrollFeed } from '../PostScrollFeed';
 
 interface CategorySlideProps {
@@ -41,7 +40,6 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
   onEditExpense,
   onDeleteExpense,
 }) => {
-  const [selectedWeek, setSelectedWeek] = useState<WeekNumber | 'all'>('all');
   const [selectedSupermarket, setSelectedSupermarket] = useState<string | 'all'>('all');
   const [newStoreInput, setNewStoreInput] = useState('');
   const [isEditingCap, setIsEditingCap] = useState(false);
@@ -277,17 +275,6 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
         </section>
       )}
 
-      <WeeklyBreakdown
-        expenses={visibleExpenses}
-        weeklyTargetGBP={capGBP / 4}
-        selectedWeek={selectedWeek}
-        onSelectWeek={setSelectedWeek}
-        showInr={showInr}
-        gbpToInrRate={config.gbpToInrRate}
-        mode="single"
-        accentColorClass={accentBarClass}
-      />
-
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
           <h3 className="font-display text-sm font-semibold text-slate-900">
@@ -351,7 +338,6 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
         title={`${title} Feed`}
         subtitle={`${config.monthLabel} · Edit or remove entries anytime`}
         expenses={visibleExpenses}
-        selectedWeek={selectedWeek}
         onEditExpense={onEditExpense}
         onDeleteExpense={onDeleteExpense}
         showInr={showInr}

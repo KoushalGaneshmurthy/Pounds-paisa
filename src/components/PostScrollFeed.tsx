@@ -22,7 +22,7 @@ interface PostScrollFeedProps {
   title: string;
   subtitle: string;
   expenses: ExpenseItem[];
-  selectedWeek: WeekNumber | 'all';
+  selectedWeek?: WeekNumber | 'all';
   onEditExpense?: (expense: ExpenseItem) => void;
   onDeleteExpense: (id: string) => void;
   showInr: boolean;
@@ -34,7 +34,7 @@ export const PostScrollFeed: React.FC<PostScrollFeedProps> = ({
   title,
   subtitle,
   expenses,
-  selectedWeek,
+  selectedWeek = 'all',
   onEditExpense,
   onDeleteExpense,
   showInr,

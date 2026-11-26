@@ -5,12 +5,10 @@ import {
   ExpenseItem,
   UniversityScope,
   UniversitySubCategory,
-  WeekNumber,
 } from '../../types/expense';
 import { SLIDE_IMAGES, UNIVERSITY_SUBCATEGORIES } from '../../data/initialData';
 import { formatGBP, formatINR } from '../../utils/formatters';
 import { BannerCard } from '../BannerCard';
-import { WeeklyBreakdown } from '../WeeklyBreakdown';
 import { PostScrollFeed } from '../PostScrollFeed';
 
 interface UniversitySlideProps {
@@ -30,7 +28,6 @@ export const UniversitySlide: React.FC<UniversitySlideProps> = ({
   onEditExpense,
   onDeleteExpense,
 }) => {
-  const [selectedWeek, setSelectedWeek] = useState<WeekNumber | 'all'>('all');
   const [scopeFilter, setScopeFilter] = useState<UniversityScope | 'all'>('all');
   const [subCatFilter, setSubCatFilter] = useState<UniversitySubCategory | 'all'>('all');
   const [isEditingCap, setIsEditingCap] = useState(false);
@@ -230,21 +227,10 @@ export const UniversitySlide: React.FC<UniversitySlideProps> = ({
         </div>
       </section>
 
-      <WeeklyBreakdown
-        expenses={visibleExpenses}
-        selectedWeek={selectedWeek}
-        onSelectWeek={setSelectedWeek}
-        showInr={showInr}
-        gbpToInrRate={config.gbpToInrRate}
-        mode="single"
-        accentColorClass="bg-indigo-600"
-      />
-
       <PostScrollFeed
         title="University Ledger"
         subtitle="Monthly study spend and separate tuition, visa, or equipment entries"
         expenses={visibleExpenses}
-        selectedWeek={selectedWeek}
         onEditExpense={onEditExpense}
         onDeleteExpense={onDeleteExpense}
         showInr={showInr}

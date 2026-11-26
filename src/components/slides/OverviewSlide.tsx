@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   ArrowRight,
   SlidersHorizontal,
@@ -14,12 +14,10 @@ import {
   BudgetConfig,
   ExpenseItem,
   IncomeItem,
-  WeekNumber,
 } from '../../types/expense';
 import { SLIDE_IMAGES } from '../../data/initialData';
 import { formatGBP, formatINR, formatShortDate } from '../../utils/formatters';
 import { BannerCard } from '../BannerCard';
-import { WeeklyBreakdown } from '../WeeklyBreakdown';
 import { PostScrollFeed } from '../PostScrollFeed';
 
 interface OverviewSlideProps {
@@ -51,8 +49,6 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
   onOpenArchiveModal,
   onJumpToSlide,
 }) => {
-  const [selectedWeek, setSelectedWeek] = useState<WeekNumber | 'all'>('all');
-
   // Exclude separate/one-off University costs (e.g. tuition/visa) from monthly living budget
   const monthlyExpenses = useMemo(
     () =>
@@ -471,28 +467,16 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
         </section>
       </div>
 
-      {/* Weekly Rollup W1 - W4 */}
-      <WeeklyBreakdown
-        expenses={monthlyExpenses}
-        weeklyTargetGBP={totals.spendableCeiling / 4}
-        selectedWeek={selectedWeek}
-        onSelectWeek={setSelectedWeek}
-        showInr={showInr}
-        gbpToInrRate={config.gbpToInrRate}
-        mode="stacked"
-      />
-
       {/* Instagram-style Post Scroll Feed */}
       <PostScrollFeed
         title="Expenditure Post Scroll"
         subtitle={`Active month (${config.monthLabel}) · Edit any expense amount, place, or card`}
         expenses={monthlyExpenses}
-        selectedWeek={selectedWeek}
         onEditExpense={onEditExpense}
         onDeleteExpense={onDeleteExpense}
         showInr={showInr}
         gbpToInrRate={config.gbpToInrRate}
-        emptyMessage="No expenditures match this week or card filter."
+        emptyMessage="No expenditures logged yet."
       />
     </div>
   );

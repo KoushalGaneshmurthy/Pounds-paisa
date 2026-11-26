@@ -710,7 +710,7 @@ export default function App() {
         </div>
       </main>
 
-      {/* Production Infrastructure & Hosting Footer */}
+      {/* Footer: Copyright */}
       <footer className="relative z-10 border-t border-white/10 bg-[#091B23]/80 mt-10 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-xs text-slate-300">
@@ -755,6 +755,10 @@ export default function App() {
                 Budget &amp; Savings Limit
               </button>
             </div>
+          </div>
+
+          <div className="mt-4 border-t border-white/10 pt-4 text-center text-[11px] text-slate-500">
+            &copy; {new Date().getFullYear()} Koushal Ganeshmurthy. All rights reserved.
           </div>
         </div>
       </footer>
