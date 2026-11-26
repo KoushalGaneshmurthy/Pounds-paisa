@@ -33,6 +33,18 @@ export const DEFAULT_SUPERMARKETS: string[] = [
   'Indian / Asian Mart',
 ];
 
+export const TRANSPORT_TYPES = [
+  'Tube / Underground',
+  'Bus',
+  'Train / National Rail',
+  'Uber / Taxi / Bolt',
+  'Coach (National Express / Megabus)',
+  'Tram / DLR',
+  'Cycle / Other',
+] as const;
+
+export type TransportType = (typeof TRANSPORT_TYPES)[number];
+
 export const PAYMENT_METHODS: PaymentMethod[] = [
   'Monzo Debit',
   'Revolut Card',

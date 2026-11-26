@@ -548,7 +548,7 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
                 )}
               </div>
 
-              {category !== 'university' && (
+              {category !== 'university' && category !== 'travel' && (
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
                     Items Bought

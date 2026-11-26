@@ -6,7 +6,7 @@ import {
   OtherSubCategory,
   WeekNumber,
 } from '../types/expense';
-import { OTHER_SUBCATEGORIES } from '../data/initialData';
+import { OTHER_SUBCATEGORIES, TRANSPORT_TYPES } from '../data/initialData';
 import { formatINR } from '../utils/formatters';
 import { fetchDailyGbpToInrRate } from '../utils/fxRate';
 
@@ -38,6 +38,9 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const [merchant, setMerchant] = useState('');
   const [category, setCategory] = useState<ExpenseCategory>(defaultCategory);
   const [subCategory, setSubCategory] = useState<OtherSubCategory>('dining_coffee');
+  const [transportType, setTransportType] = useState<string>('Tube / Underground');
+  const [travelFrom, setTravelFrom] = useState('');
+  const [travelTo, setTravelTo] = useState('');
   const [amountGBP, setAmountGBP] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState('');
@@ -60,6 +63,21 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       setDate(editingExpense.date);
       setNotes(editingExpense.notes ?? '');
       setDayRate(editingExpense.rateAtEntry ?? currentRate);
+      if (editingExpense.category === 'travel') {
+        const parts = editingExpense.title.split('→').map((s) => s.trim());
+        if (parts.length === 2) {
+          setTravelFrom(parts[0]);
+          setTravelTo(parts[1]);
+        } else {
+          setTravelFrom(editingExpense.location || '');
+          setTravelTo('');
+        }
+        setTransportType(editingExpense.merchant || 'Tube / Underground');
+      } else {
+        setTravelFrom('');
+        setTravelTo('');
+        setTransportType('Tube / Underground');
+      }
     } else {
       setCategory(defaultCategory);
       setMerchant(
@@ -68,6 +86,9 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           : ''
       );
       setSubCategory('dining_coffee');
+      setTransportType('Tube / Underground');
+      setTravelFrom('');
+      setTravelTo('');
       setAmountGBP('');
       const todayIso = new Date().toISOString().slice(0, 10);
       setDate(todayIso);
@@ -104,15 +125,36 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const finalMerchant = merchant.trim();
-    if (!finalMerchant) {
-      setError(
-        category === 'university'
-          ? 'Please enter the expense name.'
-          : 'Please enter or choose where you spent.'
-      );
-      return;
+
+    let finalTitle = merchant.trim();
+    let finalMerchant = merchant.trim();
+    let finalLocation = '';
+    let finalNotes: string | undefined = notes.trim() || undefined;
+
+    if (category === 'travel') {
+      const cleanFrom = travelFrom.trim();
+      const cleanTo = travelTo.trim();
+      if (!cleanFrom || !cleanTo) {
+        setError('Please enter both From and To locations.');
+        return;
+      }
+      const route = `${cleanFrom} → ${cleanTo}`;
+      finalTitle = route;
+      finalMerchant = transportType;
+      finalLocation = route;
+      finalNotes = `${transportType}: ${route}`;
+    } else if (category === 'university') {
+      if (!finalMerchant) {
+        setError('Please enter the expense name.');
+        return;
+      }
+    } else {
+      if (!finalMerchant) {
+        setError('Please enter or choose where you spent.');
+        return;
+      }
     }
+
     if (parsedAmount <= 0) {
       setError('Please enter a valid pound amount greater than £0.');
       return;
@@ -124,16 +166,16 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
     onSave(
       {
-        title: finalMerchant,
+        title: finalTitle,
         merchant: finalMerchant,
-        location: '',
+        location: finalLocation,
         category,
         subCategory: category === 'others' ? subCategory : undefined,
         amountGBP: Math.round(parsedAmount * 100) / 100,
         paymentMethod: editingExpense?.paymentMethod || 'Monzo Debit',
         week: editingExpense?.week || computedWeek,
         date,
-        notes: notes.trim() || undefined,
+        notes: finalNotes,
         rateAtEntry: dayRate > 0 ? dayRate : undefined,
       },
       editingExpense?.id
@@ -316,7 +358,61 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             </div>
           )}
 
-          {(category === 'travel' || category === 'others') && (
+          {category === 'travel' && (
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="exp-transport-type" className="block text-xs font-medium text-slate-700 mb-1.5">
+                  Transportation Type
+                </label>
+                <select
+                  id="exp-transport-type"
+                  value={transportType}
+                  onChange={(e) => setTransportType(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+                >
+                  {TRANSPORT_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="exp-travel-from" className="block text-xs font-medium text-slate-700 mb-1.5">
+                    From
+                  </label>
+                  <input
+                    id="exp-travel-from"
+                    type="text"
+                    value={travelFrom}
+                    onChange={(e) => setTravelFrom(e.target.value)}
+                    placeholder="e.g. Stratford, Campus, Home"
+                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="exp-travel-to" className="block text-xs font-medium text-slate-700 mb-1.5">
+                    To
+                  </label>
+                  <input
+                    id="exp-travel-to"
+                    type="text"
+                    value={travelTo}
+                    onChange={(e) => setTravelTo(e.target.value)}
+                    placeholder="e.g. Central London, Kings Cross, Airport"
+                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {category === 'others' && (
             <div>
               <label htmlFor="exp-merchant" className="block text-xs font-medium text-slate-700 mb-1.5">
                 Where (Place / Portal)
@@ -326,15 +422,15 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 type="text"
                 value={merchant}
                 onChange={(e) => setMerchant(e.target.value)}
-                placeholder={category === 'travel' ? 'e.g. TfL Tube, Uber, National Rail' : 'e.g. Lebara, Pret, Landlord'}
+                placeholder="e.g. Lebara, Pret, Landlord"
                 className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
                 required
               />
             </div>
           )}
 
-          {/* Meaningful Items Bought field moved up right after place */}
-          {category !== 'university' && (
+          {/* Items Bought field for groceries and others only */}
+          {(category === 'groceries' || category === 'others') && (
             <div>
               <label htmlFor="exp-notes" className="block text-xs font-medium text-slate-700 mb-1.5">
                 Items Bought
@@ -347,9 +443,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 placeholder={
                   category === 'groceries'
                     ? 'e.g. Bread, milk, eggs, bananas, vegetables'
-                    : category === 'travel'
-                      ? 'e.g. Zone 1–2 return, Central Line to campus'
-                      : 'e.g. Monthly rent, SIM 30GB plan, Flat white & lunch'
+                    : 'e.g. Monthly rent, SIM 30GB plan, Flat white & lunch'
                 }
                 className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
               />
