@@ -470,7 +470,7 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
       {/* Instagram-style Post Scroll Feed */}
       <PostScrollFeed
         title="Expenditure Post Scroll"
-        subtitle={`Active month (${config.monthLabel}) · Edit any expense amount, place, or card`}
+        subtitle={`Active month (${config.monthLabel}) · Edit or remove entries anytime`}
         expenses={monthlyExpenses}
         onEditExpense={onEditExpense}
         onDeleteExpense={onDeleteExpense}

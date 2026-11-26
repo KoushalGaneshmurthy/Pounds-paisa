@@ -298,17 +298,17 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
     }
 
     onSaveExpense({
-      title: title.trim(),
+      title: merchant.trim() || 'Receipt Purchase',
       merchant: merchant.trim(),
-      location: location.trim(),
+      location: '',
       category,
       subCategory: category === 'others' ? subCategory : undefined,
       universityScope: category === 'university' ? universityScope : undefined,
       universitySubCategory:
         category === 'university' ? universitySubCategory : undefined,
       amountGBP: Math.round(parsedAmount * 100) / 100,
-      paymentMethod,
-      week,
+      paymentMethod: 'Monzo Debit',
+      week: inferWeekFromDate(date),
       date,
       notes: notes.trim() || undefined,
       rateAtEntry: dayRate > 0 ? dayRate : undefined,
@@ -560,54 +560,26 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
                 </div>
               )}
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Store / Supermarket
-                  </label>
-                  <input
-                    type="text"
-                    value={merchant}
-                    onChange={(e) => setMerchant(e.target.value)}
-                    className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                    required
-                  />
-                  {isNewSupermarket && (
-                    <p className="mt-1 text-[11px] font-medium text-teal-800">
-                      New store — will be added to My Supermarkets
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Area (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="e.g. Stratford"
-                    className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">
+                  Store / Supermarket
+                </label>
+                <input
+                  type="text"
+                  value={merchant}
+                  onChange={(e) => setMerchant(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+                  required
+                />
+                {isNewSupermarket && (
+                  <p className="mt-1 text-[11px] font-medium text-teal-800">
+                    New store — will be added to My Supermarkets
+                  </p>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-12">
-                <div className="sm:col-span-7">
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Expense Title
-                  </label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                    required
-                  />
-                </div>
-
-                <div className="sm:col-span-5">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
                     Total (£ GBP)
                   </label>
@@ -626,41 +598,6 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
                     </p>
                   )}
                 </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2.5">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Card
-                  </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                    className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-900"
-                  >
-                    {PAYMENT_METHODS.map((pm) => (
-                      <option key={pm} value={pm}>
-                        {pm}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Week
-                  </label>
-                  <select
-                    value={week}
-                    onChange={(e) => setWeek(Number(e.target.value) as WeekNumber)}
-                    className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-900"
-                  >
-                    <option value={1}>Week 1</option>
-                    <option value={2}>Week 2</option>
-                    <option value={3}>Week 3</option>
-                    <option value={4}>Week 4</option>
-                  </select>
-                </div>
 
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
@@ -669,10 +606,7 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
                   <input
                     type="date"
                     value={date}
-                    onChange={(e) => {
-                      setDate(e.target.value);
-                      setWeek(inferWeekFromDate(e.target.value));
-                    }}
+                    onChange={(e) => setDate(e.target.value)}
                     className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-900"
                   />
                 </div>

@@ -4,16 +4,14 @@ import {
   Trash2,
   Pencil,
   MapPin,
-  CreditCard,
   ShoppingBag,
   Train,
   Home,
   GraduationCap,
 } from 'lucide-react';
-import { ExpenseItem, PaymentMethod, WeekNumber } from '../types/expense';
+import { ExpenseItem, WeekNumber } from '../types/expense';
 import {
   OTHER_SUBCATEGORIES,
-  PAYMENT_METHODS,
   UNIVERSITY_SUBCATEGORIES,
 } from '../data/initialData';
 import { formatGBP, formatINR, formatShortDate } from '../utils/formatters';
@@ -42,7 +40,6 @@ export const PostScrollFeed: React.FC<PostScrollFeedProps> = ({
   emptyMessage,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [paymentFilter, setPaymentFilter] = useState<PaymentMethod | 'all'>('all');
 
   const subCategoryLabelMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -59,7 +56,6 @@ export const PostScrollFeed: React.FC<PostScrollFeedProps> = ({
     return expenses
       .filter((item) => {
         if (selectedWeek !== 'all' && item.week !== selectedWeek) return false;
-        if (paymentFilter !== 'all' && item.paymentMethod !== paymentFilter) return false;
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
           return (
@@ -72,7 +68,7 @@ export const PostScrollFeed: React.FC<PostScrollFeedProps> = ({
         return true;
       })
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [expenses, selectedWeek, paymentFilter, searchQuery]);
+  }, [expenses, selectedWeek, searchQuery]);
 
   const filteredTotal = filteredExpenses.reduce((s, e) => s + e.amountGBP, 0);
 
@@ -130,20 +126,6 @@ export const PostScrollFeed: React.FC<PostScrollFeedProps> = ({
               className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none sm:w-52"
             />
           </div>
-
-          <select
-            value={paymentFilter}
-            onChange={(e) => setPaymentFilter(e.target.value as PaymentMethod | 'all')}
-            aria-label="Filter by payment method"
-            className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 focus:border-slate-400 focus:bg-white focus:outline-none"
-          >
-            <option value="all">All Cards / Cash</option>
-            {PAYMENT_METHODS.map((pm) => (
-              <option key={pm} value={pm}>
-                {pm}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -175,13 +157,11 @@ export const PostScrollFeed: React.FC<PostScrollFeedProps> = ({
                         {getCategoryName(item)}
                       </span>
                       <span aria-hidden="true">·</span>
-                      <span>Week {item.week}</span>
-                      <span aria-hidden="true">·</span>
                       <span>{formatShortDate(item.date)}</span>
                     </div>
 
                     <h4 className="font-display text-sm font-semibold text-slate-900 sm:text-[15px]">
-                      {item.title}
+                      {item.title || item.merchant}
                     </h4>
 
                     {item.notes && (
@@ -190,19 +170,17 @@ export const PostScrollFeed: React.FC<PostScrollFeedProps> = ({
                       </p>
                     )}
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-xs text-slate-500">
-                      <span className="inline-flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                        <span>
-                          {item.merchant}
-                          {item.location ? ` · ${item.location}` : ''}
+                    {(item.location || (item.title && item.title !== item.merchant)) && (
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-xs text-slate-500">
+                        <span className="inline-flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                          <span>
+                            {item.merchant}
+                            {item.location ? ` · ${item.location}` : ''}
+                          </span>
                         </span>
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <CreditCard className="h-3.5 w-3.5 text-slate-400" />
-                        <span>{item.paymentMethod}</span>
-                      </span>
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

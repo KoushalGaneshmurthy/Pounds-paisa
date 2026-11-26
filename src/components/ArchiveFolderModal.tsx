@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { X, Folder, Search, Archive, MapPin, CreditCard, ChevronRight } from 'lucide-react';
+import { X, Folder, Search, Archive, MapPin, ChevronRight } from 'lucide-react';
 import { ArchivedMonth } from '../types/expense';
 import { formatGBP, formatINR, formatShortDate } from '../utils/formatters';
 
@@ -79,7 +79,6 @@ export const ArchiveFolderModal: React.FC<ArchiveFolderModalProps> = ({
           exp.title.toLowerCase().includes(q) ||
           exp.merchant.toLowerCase().includes(q) ||
           exp.location.toLowerCase().includes(q) ||
-          exp.paymentMethod.toLowerCase().includes(q) ||
           (exp.notes && exp.notes.toLowerCase().includes(q));
         if (match) {
           const fallbackRate =
@@ -216,8 +215,6 @@ export const ArchiveFolderModal: React.FC<ArchiveFolderModalProps> = ({
                         <span className="font-semibold text-teal-800">{monthLabel}</span>
                         <span aria-hidden="true">·</span>
                         <span>{formatShortDate(expense.date)}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{expense.paymentMethod}</span>
                       </div>
                       <p className="mt-0.5 text-sm font-semibold text-slate-900">
                         {expense.title}
@@ -365,10 +362,6 @@ export const ArchiveFolderModal: React.FC<ArchiveFolderModalProps> = ({
                             <span className="inline-flex items-center gap-1">
                               <MapPin className="h-3 w-3" />
                               {exp.merchant}
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                              <CreditCard className="h-3 w-3" />
-                              {exp.paymentMethod}
                             </span>
                           </div>
                         </div>

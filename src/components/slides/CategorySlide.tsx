@@ -105,16 +105,6 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
       .sort((a, b) => b.amount - a.amount);
   }, [categoryExpenses]);
 
-  const paymentBreakdown = useMemo(() => {
-    const map = new Map<string, number>();
-    categoryExpenses.forEach((e) => {
-      map.set(e.paymentMethod, (map.get(e.paymentMethod) || 0) + e.amountGBP);
-    });
-    return Array.from(map.entries())
-      .map(([method, amount]) => ({ method, amount }))
-      .sort((a, b) => b.amount - a.amount);
-  }, [categoryExpenses]);
-
   const accentBarClass = category === 'groceries' ? 'bg-emerald-600' : 'bg-sky-600';
 
   const handleCreateStore = (e: React.FormEvent) => {
@@ -275,7 +265,7 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
         </section>
       )}
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
           <h3 className="font-display text-sm font-semibold text-slate-900">
             Where You Spent
@@ -306,29 +296,6 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
                   </div>
                 );
               })
-            )}
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-          <h3 className="font-display text-sm font-semibold text-slate-900">
-            Card & Payment Split
-          </h3>
-          <div className="mt-4 divide-y divide-slate-100">
-            {paymentBreakdown.length === 0 ? (
-              <p className="text-xs text-slate-500 py-4">No payment entries yet.</p>
-            ) : (
-              paymentBreakdown.map((p) => (
-                <div
-                  key={p.method}
-                  className="flex items-center justify-between py-2.5 text-xs"
-                >
-                  <span className="font-medium text-slate-700">{p.method}</span>
-                  <span className="font-mono-num font-semibold text-slate-900">
-                    {formatGBP(p.amount)}
-                  </span>
-                </div>
-              ))
             )}
           </div>
         </section>
