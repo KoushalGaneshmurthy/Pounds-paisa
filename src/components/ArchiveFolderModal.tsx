@@ -151,7 +151,7 @@ export const ArchiveFolderModal: React.FC<ArchiveFolderModalProps> = ({
               type="text"
               value={archiveSearch}
               onChange={(e) => setArchiveSearch(e.target.value)}
-              placeholder="Search last month or older archives (e.g. Lidl, Oyster, Rent)..."
+              placeholder="Search last month or older archives (e.g. Store, Travel, Rent)..."
               aria-label="Search archived months"
               className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none"
             />

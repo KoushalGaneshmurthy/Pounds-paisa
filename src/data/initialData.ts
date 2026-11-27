@@ -24,14 +24,7 @@ export const DEFAULT_BUDGET_CONFIG: BudgetConfig = {
   gbpToInrRate: 0,
 };
 
-export const DEFAULT_SUPERMARKETS: string[] = [
-  'Aldi',
-  'Lidl',
-  'Tesco',
-  "Sainsbury's",
-  'Asda',
-  'Indian / Asian Mart',
-];
+export const DEFAULT_SUPERMARKETS: string[] = [];
 
 export const TRANSPORT_TYPES = [
   'Tube / Underground',

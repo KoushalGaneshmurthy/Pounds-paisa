@@ -80,11 +80,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       }
     } else {
       setCategory(defaultCategory);
-      setMerchant(
-        defaultCategory === 'groceries'
-          ? defaultSupermarket || supermarkets[0] || 'Aldi'
-          : ''
-      );
+      setMerchant(defaultSupermarket || '');
       setSubCategory('dining_coffee');
       setTransportType('Tube / Underground');
       setTravelFrom('');
@@ -143,7 +139,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       finalMerchant = transportType;
       finalLocation = route;
       finalNotes = `${transportType}: ${route}`;
-    } else if (category === 'university') {
+    } else if (category === 'university' || category === 'others') {
       if (!finalMerchant) {
         setError('Please enter the expense name.');
         return;
@@ -221,7 +217,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           >
             <span className="inline-flex items-center gap-2">
               <Camera className="h-4 w-4 text-teal-700 shrink-0" />
-              <span>Have a receipt photo? Scan Tesco, Aldi, or any UK receipt</span>
+              <span>Have a receipt photo? Scan receipt</span>
             </span>
             <span className="font-semibold text-teal-800 shrink-0">Scan →</span>
           </button>
@@ -248,7 +244,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                   onClick={() => {
                     setCategory(cat.id);
                     if (cat.id === 'groceries' && !supermarkets.includes(merchant)) {
-                      setMerchant(supermarkets[0] || 'Aldi');
+                      setMerchant(defaultSupermarket || '');
                     }
                   }}
                   className={`rounded-lg py-2 text-xs font-medium transition-colors whitespace-nowrap ${
@@ -263,101 +259,98 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             </div>
           </div>
 
-          {category === 'others' && (
-            <div>
-              <label htmlFor="sub-cat" className="block text-xs font-medium text-slate-700 mb-1.5">
-                Other Bucket
-              </label>
-              <select
-                id="sub-cat"
-                value={subCategory}
-                onChange={(e) => setSubCategory(e.target.value as OtherSubCategory)}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-              >
-                {OTHER_SUBCATEGORIES.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Category-specific placement / name */}
+          {/* Groceries: Supermarket & Items Bought */}
           {category === 'groceries' && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="exp-supermarket" className="block text-xs font-medium text-slate-700">
-                  Supermarket
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowNewSupermarket((v) => !v)}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:text-teal-900"
-                >
-                  <Plus className="h-3 w-3" />
-                  Add New Supermarket
-                </button>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="exp-supermarket" className="block text-xs font-medium text-slate-700">
+                    Supermarket
+                  </label>
+                  {supermarkets.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowNewSupermarket((v) => !v)}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:text-teal-900"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add New Supermarket
+                    </button>
+                  )}
+                </div>
+
+                {showNewSupermarket && (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newSupermarketName}
+                      onChange={(e) => setNewSupermarketName(e.target.value)}
+                      placeholder="e.g. Waitrose, Morrisons, Iceland"
+                      className="h-9 flex-1 rounded-lg border border-slate-300 px-3 text-xs text-slate-900 focus:border-slate-500 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCreateSupermarket}
+                      className="rounded-lg bg-slate-900 px-3 text-xs font-medium text-white hover:bg-slate-800 whitespace-nowrap"
+                    >
+                      Save Store
+                    </button>
+                  </div>
+                )}
+
+                {supermarkets.length > 0 ? (
+                  <select
+                    id="exp-supermarket"
+                    value={merchant || ''}
+                    onChange={(e) => {
+                      if (e.target.value !== '__custom__') {
+                        setMerchant(e.target.value);
+                      }
+                    }}
+                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+                  >
+                    <option value="" disabled>
+                      Select a supermarket
+                    </option>
+                    {supermarkets.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                    {!supermarkets.includes(merchant) && merchant && (
+                      <option value={merchant}>{merchant}</option>
+                    )}
+                  </select>
+                ) : (
+                  <input
+                    id="exp-supermarket"
+                    type="text"
+                    value={merchant}
+                    onChange={(e) => setMerchant(e.target.value)}
+                    placeholder="e.g. Store or supermarket name"
+                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+                    required
+                  />
+                )}
               </div>
 
-              {showNewSupermarket && (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newSupermarketName}
-                    onChange={(e) => setNewSupermarketName(e.target.value)}
-                    placeholder="e.g. Waitrose, Morrisons, Iceland"
-                    className="h-9 flex-1 rounded-lg border border-slate-300 px-3 text-xs text-slate-900 focus:border-slate-500 focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleCreateSupermarket}
-                    className="rounded-lg bg-slate-900 px-3 text-xs font-medium text-white hover:bg-slate-800 whitespace-nowrap"
-                  >
-                    Save Store
-                  </button>
-                </div>
-              )}
-
-              <select
-                id="exp-supermarket"
-                value={supermarkets.includes(merchant) ? merchant : '__custom__'}
-                onChange={(e) => {
-                  if (e.target.value !== '__custom__') {
-                    setMerchant(e.target.value);
-                  }
-                }}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-              >
-                {supermarkets.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-                {!supermarkets.includes(merchant) && merchant && (
-                  <option value="__custom__">{merchant}</option>
-                )}
-              </select>
+              <div>
+                <label htmlFor="exp-notes" className="block text-xs font-medium text-slate-700 mb-1.5">
+                  Items Bought
+                </label>
+                <input
+                  id="exp-notes"
+                  type="text"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="e.g. Bread, milk, eggs, bananas, vegetables"
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+                />
+              </div>
             </div>
           )}
 
-          {category === 'university' && (
-            <div>
-              <label htmlFor="exp-uni-name" className="block text-xs font-medium text-slate-700 mb-1.5">
-                Expense Name
-              </label>
-              <input
-                id="exp-uni-name"
-                type="text"
-                value={merchant}
-                onChange={(e) => setMerchant(e.target.value)}
-                placeholder="e.g. Tuition fee, Library printing, Textbooks, Student visa"
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                required
-              />
-            </div>
-          )}
-
+          {/* Travel: Transportation Type, From, To */}
           {category === 'travel' && (
             <div className="space-y-3">
               <div>
@@ -412,40 +405,24 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             </div>
           )}
 
-          {category === 'others' && (
+          {/* University & Others: Clean Expense Name */}
+          {(category === 'university' || category === 'others') && (
             <div>
-              <label htmlFor="exp-merchant" className="block text-xs font-medium text-slate-700 mb-1.5">
-                Where (Place / Portal)
+              <label htmlFor="exp-name" className="block text-xs font-medium text-slate-700 mb-1.5">
+                Expense Name
               </label>
               <input
-                id="exp-merchant"
+                id="exp-name"
                 type="text"
                 value={merchant}
                 onChange={(e) => setMerchant(e.target.value)}
-                placeholder="e.g. Lebara, Pret, Landlord"
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                required
-              />
-            </div>
-          )}
-
-          {/* Items Bought field for groceries and others only */}
-          {(category === 'groceries' || category === 'others') && (
-            <div>
-              <label htmlFor="exp-notes" className="block text-xs font-medium text-slate-700 mb-1.5">
-                Items Bought
-              </label>
-              <input
-                id="exp-notes"
-                type="text"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
                 placeholder={
-                  category === 'groceries'
-                    ? 'e.g. Bread, milk, eggs, bananas, vegetables'
-                    : 'e.g. Monthly rent, SIM 30GB plan, Flat white & lunch'
+                  category === 'university'
+                    ? 'e.g. Tuition fee, Library printing, Textbooks, Student visa'
+                    : 'e.g. Room rent, SIM card, Gym membership, Coffee'
                 }
                 className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+                required
               />
             </div>
           )}

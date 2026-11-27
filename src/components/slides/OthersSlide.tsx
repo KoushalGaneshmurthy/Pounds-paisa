@@ -1,12 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Pencil, Check } from 'lucide-react';
-import {
-  BudgetConfig,
-  ExpenseItem,
-  OtherSubCategory,
-} from '../../types/expense';
-import { OTHER_SUBCATEGORIES, SLIDE_IMAGES } from '../../data/initialData';
-import { formatGBP, formatINR } from '../../utils/formatters';
+import { BudgetConfig, ExpenseItem } from '../../types/expense';
+import { SLIDE_IMAGES } from '../../data/initialData';
+import { formatGBP } from '../../utils/formatters';
 import { BannerCard } from '../BannerCard';
 import { PostScrollFeed } from '../PostScrollFeed';
 
@@ -27,7 +23,6 @@ export const OthersSlide: React.FC<OthersSlideProps> = ({
   onEditExpense,
   onDeleteExpense,
 }) => {
-  const [selectedSubCat, setSelectedSubCat] = useState<OtherSubCategory | 'all'>('all');
   const [isEditingCap, setIsEditingCap] = useState(false);
   const [capDraft, setCapDraft] = useState(String(config.othersCapGBP));
 
@@ -36,21 +31,8 @@ export const OthersSlide: React.FC<OthersSlideProps> = ({
     [expenses]
   );
 
-  const filteredBySubCat = useMemo(() => {
-    if (selectedSubCat === 'all') return othersExpenses;
-    return othersExpenses.filter((e) => e.subCategory === selectedSubCat);
-  }, [othersExpenses, selectedSubCat]);
-
   const totalSpent = useMemo(
     () => othersExpenses.reduce((s, e) => s + e.amountGBP, 0),
-    [othersExpenses]
-  );
-
-  const nonRentSpent = useMemo(
-    () =>
-      othersExpenses
-        .filter((e) => e.subCategory !== 'rent')
-        .reduce((s, e) => s + e.amountGBP, 0),
     [othersExpenses]
   );
 
@@ -71,18 +53,6 @@ export const OthersSlide: React.FC<OthersSlideProps> = ({
         ? `Over Cap · ${formatGBP(Math.abs(remaining))} above monthly cap`
         : `Within Cap · ${formatGBP(remaining)} remaining`;
 
-  const subCatTotals = useMemo(() => {
-    return OTHER_SUBCATEGORIES.map((meta) => {
-      const items = othersExpenses.filter((e) => e.subCategory === meta.id);
-      const amount = items.reduce((s, e) => s + e.amountGBP, 0);
-      return {
-        ...meta,
-        amount,
-        count: items.length,
-      };
-    });
-  }, [othersExpenses]);
-
   const handleSaveCap = () => {
     const parsed = parseFloat(capDraft);
     if (!Number.isNaN(parsed) && parsed >= 0) {
@@ -98,11 +68,9 @@ export const OthersSlide: React.FC<OthersSlideProps> = ({
         imageAlt="Tidy UK student study desk overlooking misty British rooftops"
         sectionIndex="Slide 05 of 05 · Others"
         title="Others"
-        subtitle="Rent, SIM & bills, dining out, laundry, and gym."
+        subtitle="Rent, SIM & bills, dining out, laundry, and other miscellaneous expenses."
         primaryLabel="Total Others"
         primaryAmountGBP={totalSpent}
-        secondaryLabel="Non-Rent"
-        secondaryAmountGBP={nonRentSpent}
         limitLabel="Monthly Cap"
         limitAmountGBP={config.othersCapGBP}
         statusText={statusText}
@@ -150,62 +118,10 @@ export const OthersSlide: React.FC<OthersSlideProps> = ({
         </div>
       )}
 
-      {/* Clean 5-Bucket Filter Grid */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
-          <h3 className="font-display text-base font-semibold text-slate-900">
-            Other Categories
-          </h3>
-          {selectedSubCat !== 'all' && (
-            <button
-              type="button"
-              onClick={() => setSelectedSubCat('all')}
-              className="text-xs font-medium text-teal-700 hover:text-teal-900 underline underline-offset-4 whitespace-nowrap shrink-0"
-            >
-              Show all
-            </button>
-          )}
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {subCatTotals.map((sub) => {
-            const active = selectedSubCat === sub.id;
-            return (
-              <button
-                key={sub.id}
-                type="button"
-                onClick={() => setSelectedSubCat(active ? 'all' : sub.id)}
-                className={`text-left rounded-xl border p-3.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 ${
-                  active
-                    ? 'border-slate-900 bg-slate-50'
-                    : 'border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                }`}
-              >
-                <p className="text-xs font-semibold text-slate-900 truncate">
-                  {sub.label}
-                </p>
-                <p className="font-mono-num mt-1.5 text-base font-bold text-slate-900">
-                  {formatGBP(sub.amount)}
-                </p>
-                {showInr && config.gbpToInrRate > 0 && (
-                  <p className="font-mono-num mt-0.5 text-[11px] text-slate-500">
-                    {formatINR(sub.amount, config.gbpToInrRate)}
-                  </p>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
       <PostScrollFeed
         title="Others Feed"
-        subtitle={
-          selectedSubCat === 'all'
-            ? `${config.monthLabel} · All other expenses`
-            : `Filtered: ${OTHER_SUBCATEGORIES.find((s) => s.id === selectedSubCat)?.label}`
-        }
-        expenses={filteredBySubCat}
+        subtitle={`${config.monthLabel} · All other expenses`}
+        expenses={othersExpenses}
         onEditExpense={onEditExpense}
         onDeleteExpense={onDeleteExpense}
         showInr={showInr}

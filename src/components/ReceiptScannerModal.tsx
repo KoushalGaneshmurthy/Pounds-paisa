@@ -223,7 +223,7 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
       setSubCategory(validSub);
       setUniversitySubCategory(validUniSub);
       setUniversityScope(validUniSub === 'tuition_fees' || validUniSub === 'visa_ihs' ? 'separate' : 'monthly');
-      setMerchant(r.storeName?.trim() || 'Tesco');
+      setMerchant(r.storeName?.trim() || '');
       setLocation(r.location?.trim() || '');
       setTitle(r.title?.trim() || `${r.storeName || 'Receipt'} Purchase`);
       setAmountGBP(
@@ -327,7 +327,7 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
               Receipt Photo Scanner
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Upload a Tesco, Aldi, Lidl, or travel receipt photo to auto-extract items, total, date & store
+              Upload any grocery, store, or travel receipt photo to auto-extract items, total, date & store
             </p>
           </div>
           <button
@@ -384,7 +384,7 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
                     Drop a UK receipt photo here, or upload from device
                   </p>
                   <p className="mt-1 text-xs text-slate-500 max-w-md">
-                    Works with long Tesco, Aldi, Lidl, Sainsbury’s, Boots, or train ticket photos
+                    Works with long supermarket, store, or travel ticket photos
                   </p>
                   <button
                     type="button"
@@ -535,7 +535,7 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
                     category === 'university'
                       ? 'e.g. Tuition fee, Library printing'
                       : category === 'groceries'
-                        ? 'e.g. Tesco, Aldi'
+                        ? 'e.g. Supermarket name'
                         : 'e.g. TfL, Pret'
                   }
                   className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"

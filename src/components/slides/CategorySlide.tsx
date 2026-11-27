@@ -201,7 +201,7 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
                 type="text"
                 value={newStoreInput}
                 onChange={(e) => setNewStoreInput(e.target.value)}
-                placeholder="Add store (e.g. Waitrose)"
+                placeholder="Add store name"
                 aria-label="Add new supermarket"
                 className="h-9 w-44 rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none"
               />
@@ -216,36 +216,42 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
-            {supermarketTotals.map((store) => {
-              const active =
-                selectedSupermarket.toLowerCase() === store.name.toLowerCase();
-              return (
-                <button
-                  key={store.name}
-                  type="button"
-                  onClick={() =>
-                    setSelectedSupermarket(active ? 'all' : store.name)
-                  }
-                  className={`rounded-xl border p-3 text-left transition-colors ${
-                    active
-                      ? 'border-slate-900 bg-slate-50'
-                      : 'border-slate-200/80 bg-white hover:border-slate-300'
-                  }`}
-                >
-                  <p className="text-xs font-semibold text-slate-900 truncate">
-                    {store.name}
-                  </p>
-                  <p className="font-mono-num mt-1 text-sm font-bold text-slate-900">
-                    {formatGBP(store.amount)}
-                  </p>
-                  {showInr && config.gbpToInrRate > 0 && (
-                    <p className="font-mono-num text-[11px] text-slate-500">
-                      {formatINR(store.amount, config.gbpToInrRate)}
+            {supermarketTotals.length === 0 ? (
+              <p className="col-span-full py-2 text-xs text-slate-400">
+                No stores added yet. Add a store above or log an expense.
+              </p>
+            ) : (
+              supermarketTotals.map((store) => {
+                const active =
+                  selectedSupermarket.toLowerCase() === store.name.toLowerCase();
+                return (
+                  <button
+                    key={store.name}
+                    type="button"
+                    onClick={() =>
+                      setSelectedSupermarket(active ? 'all' : store.name)
+                    }
+                    className={`rounded-xl border p-3 text-left transition-colors ${
+                      active
+                        ? 'border-slate-900 bg-slate-50'
+                        : 'border-slate-200/80 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <p className="text-xs font-semibold text-slate-900 truncate">
+                      {store.name}
                     </p>
-                  )}
-                </button>
-              );
-            })}
+                    <p className="font-mono-num mt-1 text-sm font-bold text-slate-900">
+                      {formatGBP(store.amount)}
+                    </p>
+                    {showInr && config.gbpToInrRate > 0 && (
+                      <p className="font-mono-num text-[11px] text-slate-500">
+                        {formatINR(store.amount, config.gbpToInrRate)}
+                      </p>
+                    )}
+                  </button>
+                );
+              })
+            )}
           </div>
 
           {selectedSupermarket !== 'all' && (

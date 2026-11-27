@@ -4,10 +4,6 @@ import {
   SlidersHorizontal,
   ShieldCheck,
   AlertTriangle,
-  Plus,
-  Pencil,
-  Trash2,
-  FolderArchive,
 } from 'lucide-react';
 import {
   ArchivedMonth,
@@ -16,37 +12,30 @@ import {
   IncomeItem,
 } from '../../types/expense';
 import { SLIDE_IMAGES } from '../../data/initialData';
-import { formatGBP, formatINR, formatShortDate } from '../../utils/formatters';
+import { formatGBP } from '../../utils/formatters';
 import { BannerCard } from '../BannerCard';
-import { PostScrollFeed } from '../PostScrollFeed';
 
 interface OverviewSlideProps {
   expenses: ExpenseItem[];
-  incomes: IncomeItem[];
+  incomes?: IncomeItem[];
   lastMonthArchive?: ArchivedMonth;
   config: BudgetConfig;
   showInr: boolean;
-  onEditExpense: (expense: ExpenseItem) => void;
-  onDeleteExpense: (id: string) => void;
-  onOpenIncomeModal: (income?: IncomeItem) => void;
-  onDeleteIncome: (id: string) => void;
+  onEditExpense?: (expense: ExpenseItem) => void;
+  onDeleteExpense?: (id: string) => void;
+  onOpenIncomeModal?: (income?: IncomeItem) => void;
+  onDeleteIncome?: (id: string) => void;
   onOpenLimitsModal: () => void;
-  onOpenArchiveModal: () => void;
+  onOpenArchiveModal?: () => void;
   onJumpToSlide: (index: number) => void;
 }
 
 export const OverviewSlide: React.FC<OverviewSlideProps> = ({
   expenses,
-  incomes,
-  lastMonthArchive,
+  incomes = [],
   config,
   showInr,
-  onEditExpense,
-  onDeleteExpense,
-  onOpenIncomeModal,
-  onDeleteIncome,
   onOpenLimitsModal,
-  onOpenArchiveModal,
   onJumpToSlide,
 }) => {
   const totals = useMemo(() => {
@@ -84,11 +73,6 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
       totalRemainingWithSavings,
     };
   }, [expenses, incomes, config]);
-
-  const lastMonthSpent = useMemo(() => {
-    if (!lastMonthArchive) return 0;
-    return lastMonthArchive.expenses.reduce((s, e) => s + e.amountGBP, 0);
-  }, [lastMonthArchive]);
 
   const statusInfo = useMemo(() => {
     if (
@@ -154,7 +138,7 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
     },
     {
       slideIndex: 3,
-      name: 'University (Monthly)',
+      name: 'University',
       spent: totals.universityMonthly,
       cap: config.universityCapGBP,
       barClass: 'bg-indigo-600',
@@ -175,7 +159,7 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
         imageAlt="Historic London university street in morning mist"
         sectionIndex="Slide 01 of 05 · Overview"
         title={`${config.monthLabel} Budget`}
-        subtitle="Active month living spend. Separate tuition & one-off university fees live on Slide 04."
+        subtitle="Active month living spend & macro overview."
         primaryLabel="Monthly Spent"
         primaryAmountGBP={totals.totalSpent}
         secondaryLabel="Total Funds"
@@ -302,149 +286,6 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
           })}
         </div>
       </section>
-
-      {/* Part-Time Salary & Income + Last Month Reference */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
-        <section className="lg:col-span-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
-            <div>
-              <div className="flex items-baseline gap-2.5">
-                <h3 className="font-display text-base font-semibold text-slate-900">
-                  Part-Time Salary & Earnings
-                </h3>
-                <span className="font-mono-num text-xs font-semibold text-teal-800">
-                  +{formatGBP(totals.totalSalary)}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Add shifts or extra earnings for {config.monthLabel}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => onOpenIncomeModal()}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-medium text-white hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add Salary
-            </button>
-          </div>
-
-          {incomes.length === 0 ? (
-            <p className="py-6 text-center text-xs text-slate-500">
-              No part-time salary added for {config.monthLabel} yet.
-            </p>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {incomes.map((inc) => {
-                const rate =
-                  inc.rateAtEntry && inc.rateAtEntry > 0 ? inc.rateAtEntry : config.gbpToInrRate;
-                return (
-                  <div
-                    key={inc.id}
-                    className="flex items-center justify-between gap-3 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-slate-900 truncate">
-                        {inc.title}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {inc.source} · {formatShortDate(inc.date)}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="text-right">
-                        <p className="font-mono-num text-sm font-semibold text-emerald-700">
-                          +{formatGBP(inc.amountGBP)}
-                        </p>
-                        {showInr && rate > 0 && (
-                          <p className="font-mono-num text-[11px] text-slate-500">
-                            {formatINR(inc.amountGBP, rate)}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => onOpenIncomeModal(inc)}
-                          aria-label={`Edit ${inc.title}`}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDeleteIncome(inc.id)}
-                          aria-label={`Delete ${inc.title}`}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        <section className="lg:col-span-4 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 flex flex-col justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-              <FolderArchive className="h-4 w-4 text-slate-600" />
-              <span>Previous Month Reference</span>
-            </div>
-
-            {lastMonthArchive ? (
-              <div className="mt-3 space-y-2">
-                <h3 className="font-display text-base font-bold text-slate-900">
-                  {lastMonthArchive.monthLabel}
-                </h3>
-                <p className="font-mono-num text-2xl font-bold text-slate-900">
-                  {formatGBP(lastMonthSpent)}
-                  <span className="ml-1.5 text-xs font-normal text-slate-500">spent</span>
-                </p>
-                {showInr && lastMonthArchive.config.gbpToInrRate > 0 && (
-                  <p className="font-mono-num text-xs text-slate-500">
-                    {formatINR(lastMonthSpent, lastMonthArchive.config.gbpToInrRate)}
-                  </p>
-                )}
-                <p className="text-xs text-slate-600 pt-1">
-                  Older months stay archived out of sight. Search or browse any past month inside Archives.
-                </p>
-              </div>
-            ) : (
-              <p className="mt-3 text-xs text-slate-500">
-                No previous month archived yet.
-              </p>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={onOpenArchiveModal}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-100 transition-colors"
-          >
-            Open Archive Folder
-          </button>
-        </section>
-      </div>
-
-      {/* Instagram-style Post Scroll Feed */}
-      <PostScrollFeed
-        title="Expenditure Post Scroll"
-        subtitle={`Active month (${config.monthLabel}) · Edit or remove entries anytime`}
-        expenses={expenses}
-        onEditExpense={onEditExpense}
-        onDeleteExpense={onDeleteExpense}
-        showInr={showInr}
-        gbpToInrRate={config.gbpToInrRate}
-        emptyMessage="No expenditures logged yet."
-      />
     </div>
   );
 };
