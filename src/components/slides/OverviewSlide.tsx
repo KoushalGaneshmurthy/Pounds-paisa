@@ -4,6 +4,7 @@ import {
   SlidersHorizontal,
   ShieldCheck,
   AlertTriangle,
+  BarChart3,
 } from 'lucide-react';
 import {
   ArchivedMonth,
@@ -123,28 +124,28 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
 
   const buckets = [
     {
-      slideIndex: 1,
+      slideIndex: 2,
       name: 'Groceries',
       spent: totals.groceries,
       cap: config.groceriesCapGBP,
       barClass: 'bg-emerald-600',
     },
     {
-      slideIndex: 2,
+      slideIndex: 3,
       name: 'Travel',
       spent: totals.travel,
       cap: config.travelCapGBP,
       barClass: 'bg-sky-600',
     },
     {
-      slideIndex: 3,
+      slideIndex: 4,
       name: 'University',
       spent: totals.universityMonthly,
       cap: config.universityCapGBP,
       barClass: 'bg-indigo-600',
     },
     {
-      slideIndex: 4,
+      slideIndex: 5,
       name: 'Others',
       spent: totals.others,
       cap: config.othersCapGBP,
@@ -157,7 +158,7 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
       <BannerCard
         imageSrc={SLIDE_IMAGES.overview}
         imageAlt="Historic London university street in morning mist"
-        sectionIndex="Slide 01 of 05 · Overview"
+        sectionIndex="Slide 01 of 06 · Overview"
         title={`${config.monthLabel} Budget`}
         subtitle="Active month living spend & macro overview."
         primaryLabel="Monthly Spent"
@@ -171,14 +172,24 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
         showInr={showInr}
         gbpToInrRate={config.gbpToInrRate}
         actionButton={
-          <button
-            type="button"
-            onClick={onOpenLimitsModal}
-            className="inline-flex items-center gap-2 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 px-4 py-2.5 text-xs font-medium text-white hover:bg-white/25 transition-colors whitespace-nowrap shrink-0"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Adjust Limits
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onJumpToSlide(1)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-teal-500/25 border border-teal-300/40 backdrop-blur-md px-3.5 py-2.5 text-xs font-semibold text-teal-100 hover:bg-teal-500/40 transition-colors whitespace-nowrap shrink-0"
+            >
+              <BarChart3 className="h-3.5 w-3.5 text-teal-300" />
+              Analytics
+            </button>
+            <button
+              type="button"
+              onClick={onOpenLimitsModal}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 px-3.5 py-2.5 text-xs font-medium text-white hover:bg-white/25 transition-colors whitespace-nowrap shrink-0"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Adjust Limits
+            </button>
+          </div>
         }
       />
 

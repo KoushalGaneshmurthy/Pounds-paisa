@@ -17,6 +17,7 @@ import {
 } from './data/initialData';
 import { fetchDailyGbpToInrRate, getCachedFxRate } from './utils/fxRate';
 import { OverviewSlide } from './components/slides/OverviewSlide';
+import { AnalyticsSlide } from './components/slides/AnalyticsSlide';
 import { CategorySlide } from './components/slides/CategorySlide';
 import { OthersSlide } from './components/slides/OthersSlide';
 import { UniversitySlide } from './components/slides/UniversitySlide';
@@ -37,10 +38,11 @@ const STORAGE_CONFIG_KEY = 'poundwise_uk_config_v4';
 
 const SLIDES = [
   { id: 'overview', label: '01. Overview', shortLabel: 'Overview' },
-  { id: 'groceries', label: '02. Groceries', shortLabel: 'Groceries' },
-  { id: 'travel', label: '03. Travel', shortLabel: 'Travel' },
-  { id: 'university', label: '04. University', shortLabel: 'University' },
-  { id: 'others', label: '05. Others', shortLabel: 'Others' },
+  { id: 'analytics', label: '02. Analytics', shortLabel: 'Analytics' },
+  { id: 'groceries', label: '03. Groceries', shortLabel: 'Groceries' },
+  { id: 'travel', label: '04. Travel', shortLabel: 'Travel' },
+  { id: 'university', label: '05. University', shortLabel: 'University' },
+  { id: 'others', label: '06. Others', shortLabel: 'Others' },
 ] as const;
 
 export default function App() {
@@ -620,11 +622,23 @@ export default function App() {
             />
           </div>
 
-          {/* Slide 2: Groceries */}
+          {/* Slide 2: Analytics */}
+          <div className="w-full shrink-0 snap-start">
+            <AnalyticsSlide
+              expenses={expenses}
+              incomes={incomes}
+              archives={archives}
+              config={config}
+              showInr={showInr}
+              onJumpToSlide={jumpToSlide}
+            />
+          </div>
+
+          {/* Slide 3: Groceries */}
           <div className="w-full shrink-0 snap-start">
             <CategorySlide
               category="groceries"
-              sectionIndex="Slide 02 of 05 · Groceries"
+              sectionIndex="Slide 03 of 06 · Groceries"
               title="Groceries"
               subtitle="Add any supermarket you shop at, filter your receipts, and track your monthly cap."
               imageSrc={SLIDE_IMAGES.groceries}
@@ -647,11 +661,11 @@ export default function App() {
             />
           </div>
 
-          {/* Slide 3: Travel */}
+          {/* Slide 4: Travel */}
           <div className="w-full shrink-0 snap-start">
             <CategorySlide
               category="travel"
-              sectionIndex="Slide 03 of 05 · Travel"
+              sectionIndex="Slide 04 of 06 · Travel"
               title="Travel"
               subtitle="Daily Oyster/contactless caps, rail tickets, coaches, and rides."
               imageSrc={SLIDE_IMAGES.travel}
