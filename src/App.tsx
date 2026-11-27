@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Cloud, Database, Plus, RefreshCw, ShieldCheck, Sparkles, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Cloud, Database, LogOut, Plus, RefreshCw, ShieldCheck, Sparkles, User } from 'lucide-react';
 import {
   ArchivedMonth,
   BudgetConfig,
@@ -33,6 +33,7 @@ import { BudgetLimitsModal } from './components/BudgetLimitsModal';
 import { ArchiveFolderModal } from './components/ArchiveFolderModal';
 import { ReceiptScannerModal } from './components/ReceiptScannerModal';
 import { AuthModal } from './components/AuthModal';
+import { LoginScreen } from './components/LoginScreen';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { supabaseService } from './services/supabaseService';
 import {
@@ -516,6 +517,11 @@ export default function App() {
     }
   };
 
+  // Require authentication first: If no user is logged in, show the Login Screen
+  if (!currentUser) {
+    return <LoginScreen onLoginSuccess={switchUserVault} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#0C232D] text-slate-900 flex flex-col relative">
       {/* Rich Deep Oxford Teal-Navy Atmospheric Background */}
@@ -559,28 +565,26 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsAuthModalOpen(true)}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition border ${
-                currentUser
-                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
-                  : 'border-teal-500/40 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20'
-              }`}
-              title={
-                currentUser
-                  ? `Active Vault: @${currentUser.user_metadata?.username || currentUser.username || currentUser.email}`
-                  : 'Sign in to access isolated encrypted vault'
-              }
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+              title={`Active Vault: @${currentUser.user_metadata?.username || currentUser.username || currentUser.email}`}
             >
               <ShieldCheck
-                className={`h-3.5 w-3.5 ${
-                  currentUser ? 'text-emerald-400' : 'text-teal-400'
-                } ${isCloudSyncing ? 'animate-pulse' : ''}`}
+                className={`h-3.5 w-3.5 text-emerald-400 ${isCloudSyncing ? 'animate-pulse' : ''}`}
               />
               <span className="hidden sm:inline">
-                {currentUser
-                  ? `@${currentUser.user_metadata?.username || currentUser.username || currentUser.email?.split('@')[0]}`
-                  : 'Sign In / Vault'}
+                @{currentUser.user_metadata?.username || currentUser.username || currentUser.email?.split('@')[0]}
               </span>
-              {currentUser && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => switchUserVault(null)}
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-300 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 transition"
+              title="Sign Out & Lock Vault"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Sign Out</span>
             </button>
 
             <button
