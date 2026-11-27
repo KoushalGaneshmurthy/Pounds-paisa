@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Cloud, Database, Plus, RefreshCw, Sparkles } from 'lucide-react';
 import {
   ArchivedMonth,
@@ -20,6 +20,7 @@ import {
   isDateOlderThanMonth,
   normalizeMonthKey,
   formatMonthKeyToLabel,
+  getMonthSortKey,
 } from './utils/monthUtils';
 import { OverviewSlide } from './components/slides/OverviewSlide';
 import { AnalyticsSlide } from './components/slides/AnalyticsSlide';
@@ -102,6 +103,14 @@ export default function App() {
     }
     return INITIAL_ARCHIVES;
   });
+
+  const sortedArchives = useMemo(() => {
+    return [...archives].sort((a, b) => {
+      const aOrder = getMonthSortKey(a.monthLabel, a.expenses?.[0]?.date || a.archivedAt);
+      const bOrder = getMonthSortKey(b.monthLabel, b.expenses?.[0]?.date || b.archivedAt);
+      return bOrder - aOrder;
+    });
+  }, [archives]);
 
   const [config, setConfig] = useState<BudgetConfig>(() => {
     const cachedFx = getCachedFxRate(DEFAULT_BUDGET_CONFIG.gbpToInrRate);
@@ -649,7 +658,7 @@ export default function App() {
               onClick={() => setIsArchiveModalOpen(true)}
               className="rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-white/15 transition-colors whitespace-nowrap shrink-0"
             >
-              Archives ({archives.length})
+              Archives ({sortedArchives.length})
             </button>
           </div>
         </div>
@@ -666,7 +675,7 @@ export default function App() {
             <OverviewSlide
               expenses={expenses}
               incomes={incomes}
-              lastMonthArchive={archives[0]}
+              lastMonthArchive={sortedArchives[0]}
               config={config}
               showInr={showInr}
               onEditExpense={handleEditExpense}
@@ -684,7 +693,7 @@ export default function App() {
             <AnalyticsSlide
               expenses={expenses}
               incomes={incomes}
-              archives={archives}
+              archives={sortedArchives}
               config={config}
               showInr={showInr}
               onJumpToSlide={jumpToSlide}
@@ -701,7 +710,7 @@ export default function App() {
               imageSrc={SLIDE_IMAGES.groceries}
               imageAlt="Fresh British groceries and spices in a woven tote bag"
               expenses={expenses}
-              archives={archives}
+              archives={sortedArchives}
               capGBP={config.groceriesCapGBP}
               config={config}
               showInr={showInr}
@@ -729,7 +738,7 @@ export default function App() {
               imageSrc={SLIDE_IMAGES.travel}
               imageAlt="London Underground train arriving at platform at dusk"
               expenses={expenses}
-              archives={archives}
+              archives={sortedArchives}
               capGBP={config.travelCapGBP}
               config={config}
               showInr={showInr}
@@ -749,7 +758,7 @@ export default function App() {
           <div className="w-full shrink-0 snap-start">
             <UniversitySlide
               expenses={expenses}
-              archives={archives}
+              archives={sortedArchives}
               config={config}
               showInr={showInr}
               onUpdateCap={(cap) => {
@@ -768,7 +777,7 @@ export default function App() {
           <div className="w-full shrink-0 snap-start">
             <OthersSlide
               expenses={expenses}
-              archives={archives}
+              archives={sortedArchives}
               config={config}
               showInr={showInr}
               onUpdateCap={(cap) => {
@@ -889,7 +898,7 @@ export default function App() {
 
       <ArchiveFolderModal
         isOpen={isArchiveModalOpen}
-        archives={archives}
+        archives={sortedArchives}
         currentMonthLabel={config.monthLabel}
         showInr={showInr}
         currentRate={config.gbpToInrRate}

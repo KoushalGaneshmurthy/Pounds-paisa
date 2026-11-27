@@ -270,10 +270,10 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
                 </div>
 
                 <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono-num text-lg font-bold text-slate-900">
+                  <span className="font-mono-num text-lg font-bold text-slate-900 whitespace-nowrap">
                     {formatGBP(b.spent)}
                   </span>
-                  <span className="font-mono-num text-xs text-slate-500">
+                  <span className="font-mono-num text-xs text-slate-500 whitespace-nowrap">
                     {b.cap > 0 ? `of ${formatGBP(b.cap)}` : 'No cap'}
                   </span>
                 </div>

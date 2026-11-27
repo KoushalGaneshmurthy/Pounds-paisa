@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { X, Folder, Search, Archive, MapPin, ChevronRight } from 'lucide-react';
 import { ArchivedMonth } from '../types/expense';
 import { formatGBP, formatINR, formatShortDate } from '../utils/formatters';
+import { getMonthSortKey } from '../utils/monthUtils';
 
 interface ArchiveFolderModalProps {
   isOpen: boolean;
@@ -46,8 +47,16 @@ export const ArchiveFolderModal: React.FC<ArchiveFolderModalProps> = ({
   onClose,
   onArchiveCurrentMonth,
 }) => {
+  const sortedArchives = useMemo(() => {
+    return [...archives].sort((a, b) => {
+      const aOrder = getMonthSortKey(a.monthLabel, a.expenses?.[0]?.date || a.archivedAt);
+      const bOrder = getMonthSortKey(b.monthLabel, b.expenses?.[0]?.date || b.archivedAt);
+      return bOrder - aOrder;
+    });
+  }, [archives]);
+
   const [selectedFolderId, setSelectedFolderId] = useState<string>(
-    archives[0]?.id || ''
+    sortedArchives[0]?.id || ''
   );
   const [archiveSearch, setArchiveSearch] = useState('');
   const [confirmingRollover, setConfirmingRollover] = useState(false);
@@ -58,8 +67,8 @@ export const ArchiveFolderModal: React.FC<ArchiveFolderModalProps> = ({
   );
 
   const selectedFolder = useMemo(
-    () => archives.find((a) => a.id === selectedFolderId) || archives[0] || null,
-    [archives, selectedFolderId]
+    () => sortedArchives.find((a) => a.id === selectedFolderId) || sortedArchives[0] || null,
+    [sortedArchives, selectedFolderId]
   );
 
   // Global search across ALL archived months (previous month + older folders)
@@ -248,9 +257,9 @@ export const ArchiveFolderModal: React.FC<ArchiveFolderModalProps> = ({
             {/* Folder List */}
             <div className="md:col-span-4 space-y-2">
               <p className="text-xs font-medium text-slate-500 mb-2">
-                Saved Month Folders ({archives.length})
+                Saved Month Folders ({sortedArchives.length})
               </p>
-              {archives.map((folder, index) => {
+              {sortedArchives.map((folder, index) => {
                 const isSelected = selectedFolder?.id === folder.id;
                 const folderSpent = folder.expenses.reduce((s, e) => s + e.amountGBP, 0);
                 return (
