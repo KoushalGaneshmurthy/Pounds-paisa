@@ -81,6 +81,7 @@ export const INITIAL_ARCHIVES: ArchivedMonth[] = [];
 
 export const SLIDE_IMAGES = {
   overview: '/src/assets/images/uk_student_skyline_backdrop_1795398730998.jpg',
+  salary: '/src/assets/images/uk_others_student_desk_banner_1795398730481.jpg',
   groceries: '/src/assets/images/uk_groceries_market_banner_1795398730266.jpg',
   travel: '/src/assets/images/uk_travel_tube_banner_1795398730761.jpg',
   others: '/src/assets/images/uk_others_student_desk_banner_1795398730481.jpg',

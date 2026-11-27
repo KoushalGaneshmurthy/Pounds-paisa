@@ -74,7 +74,7 @@ export const UniversitySlide: React.FC<UniversitySlideProps> = ({
       <BannerCard
         imageSrc={SLIDE_IMAGES.university}
         imageAlt="Historic British university library reading room with oak desks and warm study lamps"
-        sectionIndex="Slide 05 of 06 · University"
+        sectionIndex="Slide 06 of 07 · University"
         title="University"
         subtitle="Track your tuition, books, printing, societies, and study expenses."
         primaryLabel="Total Spent"

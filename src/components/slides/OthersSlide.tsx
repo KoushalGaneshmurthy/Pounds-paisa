@@ -74,7 +74,7 @@ export const OthersSlide: React.FC<OthersSlideProps> = ({
       <BannerCard
         imageSrc={SLIDE_IMAGES.others}
         imageAlt="Tidy UK student study desk overlooking misty British rooftops"
-        sectionIndex="Slide 06 of 06 · Others"
+        sectionIndex="Slide 07 of 07 · Others"
         title="Others"
         subtitle="Rent, SIM & bills, dining out, laundry, and other miscellaneous expenses."
         primaryLabel="Total Others"

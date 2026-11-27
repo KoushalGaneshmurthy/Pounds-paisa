@@ -24,6 +24,7 @@ import {
 } from './utils/monthUtils';
 import { OverviewSlide } from './components/slides/OverviewSlide';
 import { AnalyticsSlide } from './components/slides/AnalyticsSlide';
+import { SalarySlide } from './components/slides/SalarySlide';
 import { CategorySlide } from './components/slides/CategorySlide';
 import { OthersSlide } from './components/slides/OthersSlide';
 import { UniversitySlide } from './components/slides/UniversitySlide';
@@ -47,10 +48,11 @@ import {
 const SLIDES = [
   { id: 'overview', label: '01. Overview', shortLabel: 'Overview' },
   { id: 'analytics', label: '02. Analytics', shortLabel: 'Analytics' },
-  { id: 'groceries', label: '03. Groceries', shortLabel: 'Groceries' },
-  { id: 'travel', label: '04. Travel', shortLabel: 'Travel' },
-  { id: 'university', label: '05. University', shortLabel: 'University' },
-  { id: 'others', label: '06. Others', shortLabel: 'Others' },
+  { id: 'salary', label: '03. Salary', shortLabel: 'Salary' },
+  { id: 'groceries', label: '04. Groceries', shortLabel: 'Groceries' },
+  { id: 'travel', label: '05. Travel', shortLabel: 'Travel' },
+  { id: 'university', label: '06. University', shortLabel: 'University' },
+  { id: 'others', label: '07. Others', shortLabel: 'Others' },
 ] as const;
 
 export default function App() {
@@ -416,13 +418,13 @@ export default function App() {
 
   const handleOpenAddModal = () => {
     const fallback: ExpenseCategory =
-      activeSlide === 1
+      activeSlide === 3
         ? 'groceries'
-        : activeSlide === 2
+        : activeSlide === 4
           ? 'travel'
-          : activeSlide === 3
+          : activeSlide === 5
             ? 'university'
-            : activeSlide === 4
+            : activeSlide === 6
               ? 'others'
               : 'groceries';
     setEditingExpense(null);
@@ -738,11 +740,24 @@ export default function App() {
             />
           </div>
 
-          {/* Slide 3: Groceries */}
+          {/* Slide 3: Salary */}
+          <div className="w-full shrink-0 snap-start">
+            <SalarySlide
+              incomes={incomes}
+              expenses={expenses}
+              config={config}
+              showInr={showInr}
+              onSaveSalary={handleSaveIncome}
+              onDeleteSalary={handleDeleteIncome}
+              onJumpToSlide={jumpToSlide}
+            />
+          </div>
+
+          {/* Slide 4: Groceries */}
           <div className="w-full shrink-0 snap-start">
             <CategorySlide
               category="groceries"
-              sectionIndex="Slide 03 of 06 · Groceries"
+              sectionIndex="Slide 04 of 07 · Groceries"
               title="Groceries"
               subtitle="Add any supermarket you shop at, filter your receipts, and track your monthly cap."
               imageSrc={SLIDE_IMAGES.groceries}
@@ -766,11 +781,11 @@ export default function App() {
             />
           </div>
 
-          {/* Slide 4: Travel */}
+          {/* Slide 5: Travel */}
           <div className="w-full shrink-0 snap-start">
             <CategorySlide
               category="travel"
-              sectionIndex="Slide 04 of 06 · Travel"
+              sectionIndex="Slide 05 of 07 · Travel"
               title="Travel"
               subtitle="Daily Oyster/contactless caps, rail tickets, coaches, and rides."
               imageSrc={SLIDE_IMAGES.travel}
@@ -792,7 +807,7 @@ export default function App() {
             />
           </div>
 
-          {/* Slide 5: University */}
+          {/* Slide 6: University */}
           <div className="w-full shrink-0 snap-start">
             <UniversitySlide
               expenses={expenses}
@@ -811,7 +826,7 @@ export default function App() {
             />
           </div>
 
-          {/* Slide 6: Others */}
+          {/* Slide 7: Others */}
           <div className="w-full shrink-0 snap-start">
             <OthersSlide
               expenses={expenses}

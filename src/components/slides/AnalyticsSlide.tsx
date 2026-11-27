@@ -131,7 +131,7 @@ export const AnalyticsSlide: React.FC<AnalyticsSlideProps> = ({
         bgColor: 'bg-emerald-50',
         textColor: 'text-emerald-700',
         icon: ShoppingBag,
-        slideIndex: 2,
+        slideIndex: 3,
         cap: config.groceriesCapGBP,
         count: catCountMap.groceries,
       },
@@ -144,7 +144,7 @@ export const AnalyticsSlide: React.FC<AnalyticsSlideProps> = ({
         bgColor: 'bg-sky-50',
         textColor: 'text-sky-700',
         icon: Train,
-        slideIndex: 3,
+        slideIndex: 4,
         cap: config.travelCapGBP,
         count: catCountMap.travel,
       },
@@ -157,7 +157,7 @@ export const AnalyticsSlide: React.FC<AnalyticsSlideProps> = ({
         bgColor: 'bg-indigo-50',
         textColor: 'text-indigo-700',
         icon: GraduationCap,
-        slideIndex: 4,
+        slideIndex: 5,
         cap: config.universityCapGBP,
         count: catCountMap.university,
       },
@@ -170,7 +170,7 @@ export const AnalyticsSlide: React.FC<AnalyticsSlideProps> = ({
         bgColor: 'bg-amber-50',
         textColor: 'text-amber-700',
         icon: Layers,
-        slideIndex: 5,
+        slideIndex: 6,
         cap: config.othersCapGBP,
         count: catCountMap.others,
       },
@@ -316,7 +316,7 @@ export const AnalyticsSlide: React.FC<AnalyticsSlideProps> = ({
       <BannerCard
         imageSrc={SLIDE_IMAGES.overview}
         imageAlt="Modern city financial analytics skyline"
-        sectionIndex="Slide 02 of 06 · Analytics"
+        sectionIndex="Slide 02 of 07 · Analytics"
         title="Spend Analytics & Intelligence"
         subtitle="Holistic spending velocity, category distribution, merchant metrics, and dual-currency intelligence."
         primaryLabel="Analyzed Spend"

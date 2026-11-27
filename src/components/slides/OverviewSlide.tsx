@@ -126,28 +126,28 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
 
   const buckets = [
     {
-      slideIndex: 2,
+      slideIndex: 3,
       name: 'Groceries',
       spent: totals.groceries,
       cap: config.groceriesCapGBP,
       barClass: 'bg-emerald-600',
     },
     {
-      slideIndex: 3,
+      slideIndex: 4,
       name: 'Travel',
       spent: totals.travel,
       cap: config.travelCapGBP,
       barClass: 'bg-sky-600',
     },
     {
-      slideIndex: 4,
+      slideIndex: 5,
       name: 'University',
       spent: totals.universityMonthly,
       cap: config.universityCapGBP,
       barClass: 'bg-indigo-600',
     },
     {
-      slideIndex: 5,
+      slideIndex: 6,
       name: 'Others',
       spent: totals.others,
       cap: config.othersCapGBP,
@@ -160,7 +160,7 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
       <BannerCard
         imageSrc={SLIDE_IMAGES.overview}
         imageAlt="Historic London university street in morning mist"
-        sectionIndex="Slide 01 of 06 · Overview"
+        sectionIndex="Slide 01 of 07 · Overview"
         title={`${config.monthLabel} Budget`}
         subtitle="Active month living spend & macro overview."
         primaryLabel="Monthly Spent"

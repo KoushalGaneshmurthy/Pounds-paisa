@@ -47,7 +47,8 @@ export interface IncomeItem {
   id: string;
   title: string;
   source: string;
-  amountGBP: number;
+  amountGBP: number; // total pay
+  hours?: number; // hours worked
   date: string; // YYYY-MM-DD
   rateAtEntry?: number;
 }
