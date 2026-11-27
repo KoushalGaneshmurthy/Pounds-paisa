@@ -14,6 +14,7 @@ import {
 } from '../../types/expense';
 import { SLIDE_IMAGES } from '../../data/initialData';
 import { formatGBP } from '../../utils/formatters';
+import { isDateInMonth } from '../../utils/monthUtils';
 import { BannerCard } from '../BannerCard';
 
 interface OverviewSlideProps {
@@ -40,20 +41,21 @@ export const OverviewSlide: React.FC<OverviewSlideProps> = ({
   onJumpToSlide,
 }) => {
   const totals = useMemo(() => {
-    const totalSpent = expenses.reduce((sum, e) => sum + e.amountGBP, 0);
+    const activeExpenses = expenses.filter((e) => isDateInMonth(e.date, config.monthLabel));
+    const totalSpent = activeExpenses.reduce((sum, e) => sum + e.amountGBP, 0);
     const totalSalary = incomes.reduce((sum, i) => sum + i.amountGBP, 0);
     const totalMonthlyFunds = config.monthlyAllowanceGBP + totalSalary;
 
-    const groceries = expenses
+    const groceries = activeExpenses
       .filter((e) => e.category === 'groceries')
       .reduce((sum, e) => sum + e.amountGBP, 0);
-    const travel = expenses
+    const travel = activeExpenses
       .filter((e) => e.category === 'travel')
       .reduce((sum, e) => sum + e.amountGBP, 0);
-    const others = expenses
+    const others = activeExpenses
       .filter((e) => e.category === 'others')
       .reduce((sum, e) => sum + e.amountGBP, 0);
-    const universityMonthly = expenses
+    const universityMonthly = activeExpenses
       .filter((e) => e.category === 'university')
       .reduce((sum, e) => sum + e.amountGBP, 0);
 

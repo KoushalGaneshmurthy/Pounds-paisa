@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Plus, Pencil, Check } from 'lucide-react';
-import { BudgetConfig, ExpenseItem } from '../../types/expense';
+import { ArchivedMonth, BudgetConfig, ExpenseItem } from '../../types/expense';
 import { formatGBP, formatINR } from '../../utils/formatters';
+import { isDateInMonth } from '../../utils/monthUtils';
 import { BannerCard } from '../BannerCard';
 import { PostScrollFeed } from '../PostScrollFeed';
 
@@ -13,6 +14,7 @@ interface CategorySlideProps {
   imageSrc: string;
   imageAlt: string;
   expenses: ExpenseItem[];
+  archives?: ArchivedMonth[];
   capGBP: number;
   config: BudgetConfig;
   showInr: boolean;
@@ -31,6 +33,7 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
   imageSrc,
   imageAlt,
   expenses,
+  archives = [],
   capGBP,
   config,
   showInr,
@@ -50,6 +53,11 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
     [expenses, category]
   );
 
+  const activeCategoryExpenses = useMemo(
+    () => categoryExpenses.filter((e) => isDateInMonth(e.date, config.monthLabel)),
+    [categoryExpenses, config.monthLabel]
+  );
+
   const visibleExpenses = useMemo(() => {
     if (category !== 'groceries' || selectedSupermarket === 'all') {
       return categoryExpenses;
@@ -60,8 +68,8 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
   }, [categoryExpenses, category, selectedSupermarket]);
 
   const totalSpent = useMemo(
-    () => categoryExpenses.reduce((s, e) => s + e.amountGBP, 0),
-    [categoryExpenses]
+    () => activeCategoryExpenses.reduce((s, e) => s + e.amountGBP, 0),
+    [activeCategoryExpenses]
   );
 
   const weeklyAvg = totalSpent / 4;
@@ -311,6 +319,9 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
         title={`${title} Feed`}
         subtitle={`${config.monthLabel} · Edit or remove entries anytime`}
         expenses={visibleExpenses}
+        archives={archives}
+        currentMonthLabel={config.monthLabel}
+        category={category}
         onEditExpense={onEditExpense}
         onDeleteExpense={onDeleteExpense}
         showInr={showInr}

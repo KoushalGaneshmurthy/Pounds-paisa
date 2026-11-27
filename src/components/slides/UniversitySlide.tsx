@@ -1,13 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { Pencil, Check } from 'lucide-react';
-import { BudgetConfig, ExpenseItem } from '../../types/expense';
+import { ArchivedMonth, BudgetConfig, ExpenseItem } from '../../types/expense';
 import { SLIDE_IMAGES } from '../../data/initialData';
 import { formatGBP } from '../../utils/formatters';
+import { isDateInMonth } from '../../utils/monthUtils';
 import { BannerCard } from '../BannerCard';
 import { PostScrollFeed } from '../PostScrollFeed';
 
 interface UniversitySlideProps {
   expenses: ExpenseItem[];
+  archives?: ArchivedMonth[];
   config: BudgetConfig;
   showInr: boolean;
   onUpdateCap: (newCap: number) => void;
@@ -17,6 +19,7 @@ interface UniversitySlideProps {
 
 export const UniversitySlide: React.FC<UniversitySlideProps> = ({
   expenses,
+  archives = [],
   config,
   showInr,
   onUpdateCap,
@@ -31,9 +34,14 @@ export const UniversitySlide: React.FC<UniversitySlideProps> = ({
     [expenses]
   );
 
+  const activeUniversityExpenses = useMemo(
+    () => universityExpenses.filter((e) => isDateInMonth(e.date, config.monthLabel)),
+    [universityExpenses, config.monthLabel]
+  );
+
   const totalUniSpent = useMemo(
-    () => universityExpenses.reduce((s, e) => s + e.amountGBP, 0),
-    [universityExpenses]
+    () => activeUniversityExpenses.reduce((s, e) => s + e.amountGBP, 0),
+    [activeUniversityExpenses]
   );
 
   const remaining = config.universityCapGBP - totalUniSpent;
@@ -122,6 +130,9 @@ export const UniversitySlide: React.FC<UniversitySlideProps> = ({
         title="University Ledger"
         subtitle="All university & study expense entries"
         expenses={universityExpenses}
+        archives={archives}
+        currentMonthLabel={config.monthLabel}
+        category="university"
         onEditExpense={onEditExpense}
         onDeleteExpense={onDeleteExpense}
         showInr={showInr}

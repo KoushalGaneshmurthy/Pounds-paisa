@@ -1,13 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { Pencil, Check } from 'lucide-react';
-import { BudgetConfig, ExpenseItem } from '../../types/expense';
+import { ArchivedMonth, BudgetConfig, ExpenseItem } from '../../types/expense';
 import { SLIDE_IMAGES } from '../../data/initialData';
 import { formatGBP } from '../../utils/formatters';
+import { isDateInMonth } from '../../utils/monthUtils';
 import { BannerCard } from '../BannerCard';
 import { PostScrollFeed } from '../PostScrollFeed';
 
 interface OthersSlideProps {
   expenses: ExpenseItem[];
+  archives?: ArchivedMonth[];
   config: BudgetConfig;
   showInr: boolean;
   onUpdateCap: (newCap: number) => void;
@@ -17,6 +19,7 @@ interface OthersSlideProps {
 
 export const OthersSlide: React.FC<OthersSlideProps> = ({
   expenses,
+  archives = [],
   config,
   showInr,
   onUpdateCap,
@@ -31,9 +34,14 @@ export const OthersSlide: React.FC<OthersSlideProps> = ({
     [expenses]
   );
 
+  const activeOthersExpenses = useMemo(
+    () => othersExpenses.filter((e) => isDateInMonth(e.date, config.monthLabel)),
+    [othersExpenses, config.monthLabel]
+  );
+
   const totalSpent = useMemo(
-    () => othersExpenses.reduce((s, e) => s + e.amountGBP, 0),
-    [othersExpenses]
+    () => activeOthersExpenses.reduce((s, e) => s + e.amountGBP, 0),
+    [activeOthersExpenses]
   );
 
   const remaining = config.othersCapGBP - totalSpent;
@@ -122,6 +130,9 @@ export const OthersSlide: React.FC<OthersSlideProps> = ({
         title="Others Feed"
         subtitle={`${config.monthLabel} · All other expenses`}
         expenses={othersExpenses}
+        archives={archives}
+        currentMonthLabel={config.monthLabel}
+        category="others"
         onEditExpense={onEditExpense}
         onDeleteExpense={onDeleteExpense}
         showInr={showInr}

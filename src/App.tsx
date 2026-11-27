@@ -16,6 +16,11 @@ import {
   SLIDE_IMAGES,
 } from './data/initialData';
 import { fetchDailyGbpToInrRate, getCachedFxRate } from './utils/fxRate';
+import {
+  isDateOlderThanMonth,
+  normalizeMonthKey,
+  formatMonthKeyToLabel,
+} from './utils/monthUtils';
 import { OverviewSlide } from './components/slides/OverviewSlide';
 import { AnalyticsSlide } from './components/slides/AnalyticsSlide';
 import { CategorySlide } from './components/slides/CategorySlide';
@@ -235,6 +240,58 @@ export default function App() {
   useEffect(() => {
     refreshTodayFxRate();
   }, [refreshTodayFxRate]);
+
+  // Automatically bundle any past-month expenses into monthly archive folders
+  useEffect(() => {
+    const activeKey = normalizeMonthKey(config.monthLabel);
+    if (!activeKey) return;
+    const olderExpenses = expenses.filter((e) => e.date && isDateOlderThanMonth(e.date, config.monthLabel));
+    if (olderExpenses.length === 0) return;
+
+    const groupedByMonth: Record<string, ExpenseItem[]> = {};
+    olderExpenses.forEach((e) => {
+      const key = normalizeMonthKey(e.date);
+      if (!groupedByMonth[key]) groupedByMonth[key] = [];
+      groupedByMonth[key].push(e);
+    });
+
+    setArchives((prevArchives) => {
+      let updatedArchives = [...prevArchives];
+      Object.entries(groupedByMonth).forEach(([key, items]) => {
+        const monthLabel = formatMonthKeyToLabel(key);
+        const existingIdx = updatedArchives.findIndex(
+          (a) => normalizeMonthKey(a.monthLabel) === key
+        );
+        if (existingIdx !== -1) {
+          const existing = updatedArchives[existingIdx];
+          const existingIds = new Set(existing.expenses.map((x) => x.id));
+          const newItems = items.filter((x) => !existingIds.has(x.id));
+          if (newItems.length > 0) {
+            const updated = {
+              ...existing,
+              expenses: [...existing.expenses, ...newItems],
+            };
+            updatedArchives[existingIdx] = updated;
+            if (currentUser) supabaseService.saveArchive(currentUser.id, updated);
+          }
+        } else {
+          const newFolder: ArchivedMonth = {
+            id: `arch-${key}-${Date.now()}`,
+            monthLabel,
+            archivedAt: new Date().toISOString().slice(0, 10),
+            config: { ...config, monthLabel },
+            expenses: items,
+            incomes: [],
+          };
+          updatedArchives = [newFolder, ...updatedArchives];
+          if (currentUser) supabaseService.saveArchive(currentUser.id, newFolder);
+        }
+      });
+      return updatedArchives;
+    });
+
+    setExpenses((prev) => prev.filter((e) => !e.date || !isDateOlderThanMonth(e.date, config.monthLabel)));
+  }, [config, expenses, currentUser]);
 
   const jumpToSlide = useCallback((index: number) => {
     const clamped = Math.max(0, Math.min(SLIDES.length - 1, index));
@@ -644,6 +701,7 @@ export default function App() {
               imageSrc={SLIDE_IMAGES.groceries}
               imageAlt="Fresh British groceries and spices in a woven tote bag"
               expenses={expenses}
+              archives={archives}
               capGBP={config.groceriesCapGBP}
               config={config}
               showInr={showInr}
@@ -671,6 +729,7 @@ export default function App() {
               imageSrc={SLIDE_IMAGES.travel}
               imageAlt="London Underground train arriving at platform at dusk"
               expenses={expenses}
+              archives={archives}
               capGBP={config.travelCapGBP}
               config={config}
               showInr={showInr}
@@ -686,10 +745,11 @@ export default function App() {
             />
           </div>
 
-          {/* Slide 4: University */}
+          {/* Slide 5: University */}
           <div className="w-full shrink-0 snap-start">
             <UniversitySlide
               expenses={expenses}
+              archives={archives}
               config={config}
               showInr={showInr}
               onUpdateCap={(cap) => {
@@ -704,10 +764,11 @@ export default function App() {
             />
           </div>
 
-          {/* Slide 5: Others */}
+          {/* Slide 6: Others */}
           <div className="w-full shrink-0 snap-start">
             <OthersSlide
               expenses={expenses}
+              archives={archives}
               config={config}
               showInr={showInr}
               onUpdateCap={(cap) => {
