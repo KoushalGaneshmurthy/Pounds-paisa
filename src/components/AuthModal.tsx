@@ -468,7 +468,7 @@ export function AuthModal({
                 </div>
               </div>
             ) : mode === 'signin' ? (
-              <form onSubmit={handleSignIn} className="space-y-4">
+              <form onSubmit={handleSignIn} className="space-y-4" autoComplete="off">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Email or Username
@@ -480,8 +480,11 @@ export function AuthModal({
                       required
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
-                      placeholder="e.g. koushal or adi@gmail.com"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                     />
                   </div>
                 </div>
@@ -497,8 +500,8 @@ export function AuthModal({
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                      autoComplete="new-password"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                     />
                   </div>
                 </div>
@@ -508,11 +511,11 @@ export function AuthModal({
                   disabled={loading}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 font-bold text-[#0C232D] text-sm shadow-lg shadow-teal-500/20 transition disabled:opacity-50"
                 >
-                  {loading ? 'Authenticating & Decrypting...' : 'Sign In & Unlock Vault'}
+                  {loading ? 'Authenticating & Decrypting...' : 'Sign In'}
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleSignUp} className="space-y-4">
+              <form onSubmit={handleSignUp} className="space-y-4" autoComplete="off">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Username
@@ -524,8 +527,11 @@ export function AuthModal({
                       required
                       value={signUpUsername}
                       onChange={(e) => setSignUpUsername(e.target.value)}
-                      placeholder="e.g. koushal"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                     />
                   </div>
                 </div>
@@ -541,15 +547,18 @@ export function AuthModal({
                       type="email"
                       value={signUpEmail}
                       onChange={(e) => setSignUpEmail(e.target.value)}
-                      placeholder="e.g. student@university.ac.uk"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Password (min. 6 characters)
+                    Password
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
@@ -559,8 +568,8 @@ export function AuthModal({
                       minLength={6}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                      autoComplete="new-password"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                     />
                   </div>
                 </div>
@@ -570,15 +579,15 @@ export function AuthModal({
                     Confirm Password
                   </label>
                   <div className="relative">
-                    <KeyRound className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+                    <Lock className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                     <input
                       type="password"
                       required
                       minLength={6}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                      autoComplete="new-password"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                     />
                   </div>
                 </div>
@@ -588,7 +597,7 @@ export function AuthModal({
                   disabled={loading}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 font-bold text-[#0C232D] text-sm shadow-lg shadow-teal-500/20 transition disabled:opacity-50"
                 >
-                  {loading ? 'Creating Encrypted Vault...' : 'Create Encrypted Account'}
+                  {loading ? 'Creating Encrypted Vault...' : 'Create Account'}
                 </button>
               </form>
             )}

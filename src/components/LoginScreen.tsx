@@ -3,15 +3,10 @@ import {
   AlertCircle,
   ArrowRight,
   CheckCircle2,
-  Database,
-  KeyRound,
   Lock,
   Mail,
-  PiggyBank,
   Shield,
   ShieldCheck,
-  Sparkles,
-  TrendingUp,
   User,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -62,7 +57,6 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       if (isConfigured && supabase) {
         let emailToTry = cleanId;
 
-        // If identifier is a username, resolve to email
         if (!cleanId.includes('@')) {
           const resolvedEmail = await supabaseService.resolveEmailFromUsername(cleanId);
           if (resolvedEmail) {
@@ -116,10 +110,10 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }
 
       if (loggedInUser) {
-        setSuccessMsg('Vault decrypted successfully! Entering dashboard...');
+        setSuccessMsg('Vault decrypted successfully.');
         setTimeout(() => {
           onLoginSuccess(loggedInUser);
-        }, 500);
+        }, 400);
       }
     } catch (err: any) {
       setErrorMsg(err?.message || 'Failed to sign in. Please try again.');
@@ -192,10 +186,10 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         };
       }
 
-      setSuccessMsg(`Welcome, @${cleanUsername}! Account created and vault locked to you.`);
+      setSuccessMsg(`Account created for @${cleanUsername}.`);
       setTimeout(() => {
         onLoginSuccess(createdUser);
-      }, 600);
+      }, 500);
     } catch (err: any) {
       setErrorMsg(err?.message || 'Failed to create account.');
     } finally {
@@ -205,18 +199,10 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
   return (
     <div className="min-h-screen bg-[#0C232D] text-white flex flex-col justify-center items-center px-4 py-8 sm:px-6 relative overflow-hidden">
-      {/* Radial atmospheric glows */}
+      {/* Radial atmospheric background */}
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(24,84,104,0.65)_0%,_rgba(12,35,45,0.95)_55%,_rgba(8,24,32,1)_100%)]"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-40 -right-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"
       />
 
       <div className="relative z-10 w-full max-w-md">
@@ -228,8 +214,8 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2 font-display">
             Pounds &amp; Paisa
           </h1>
-          <p className="text-sm text-slate-300 max-w-xs mx-auto">
-            UK Student Budgeting &amp; Dual-Currency Finance with AES-256 Encrypted Vaults
+          <p className="text-sm text-slate-300">
+            Sign in to access your budget &amp; expense vault
           </p>
         </div>
 
@@ -284,7 +270,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           )}
 
           {tab === 'signin' ? (
-            <form onSubmit={handleSignIn} className="space-y-4">
+            <form onSubmit={handleSignIn} className="space-y-4" autoComplete="off">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                   Email or Username
@@ -294,16 +280,15 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   <input
                     type="text"
                     required
-                    autoFocus
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="e.g. koushal or adi@gmail.com"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                   />
                 </div>
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Log in with your chosen username or full email address.
-                </p>
               </div>
 
               <div>
@@ -317,8 +302,8 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                    autoComplete="new-password"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                   />
                 </div>
               </div>
@@ -328,12 +313,12 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 disabled={loading}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 font-bold text-[#0C232D] text-sm shadow-lg shadow-teal-500/25 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
               >
-                <span>{loading ? 'Decrypting Vault...' : 'Sign In & Enter Dashboard'}</span>
+                <span>{loading ? 'Decrypting Vault...' : 'Sign In'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
           ) : (
-            <form onSubmit={handleSignUp} className="space-y-4">
+            <form onSubmit={handleSignUp} className="space-y-4" autoComplete="off">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                   Username
@@ -343,11 +328,13 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   <input
                     type="text"
                     required
-                    autoFocus
                     value={signUpUsername}
                     onChange={(e) => setSignUpUsername(e.target.value)}
-                    placeholder="e.g. koushal"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                   />
                 </div>
               </div>
@@ -363,15 +350,18 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     type="email"
                     value={signUpEmail}
                     onChange={(e) => setSignUpEmail(e.target.value)}
-                    placeholder="student@university.ac.uk"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Password (min. 6 characters)
+                  Password
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
@@ -381,8 +371,8 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                    autoComplete="new-password"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                   />
                 </div>
               </div>
@@ -392,15 +382,15 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <KeyRound className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                  <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
                   <input
                     type="password"
                     required
                     minLength={6}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                    autoComplete="new-password"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-400 transition"
                   />
                 </div>
               </div>
@@ -410,37 +400,21 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 disabled={loading}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 font-bold text-[#0C232D] text-sm shadow-lg shadow-teal-500/25 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
               >
-                <span>{loading ? 'Creating Encrypted Vault...' : 'Create Account & Enter'}</span>
+                <span>{loading ? 'Creating Encrypted Vault...' : 'Create Account'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
           )}
 
-          {/* Privacy & Encryption badge strip */}
+          {/* Encryption status */}
           <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
             <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
               <ShieldCheck className="w-4 h-4" />
-              AES-GCM-256 Vault
+              AES-GCM-256 Encrypted
             </span>
             <span className="px-2 py-0.5 rounded bg-white/10 text-slate-300 font-mono text-[10px]">
-              Multi-User Isolated
+              Zero Data Leakage
             </span>
-          </div>
-        </div>
-
-        {/* Feature Pills Footer */}
-        <div className="mt-6 grid grid-cols-3 gap-2.5 text-center text-xs text-slate-400">
-          <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
-            <PiggyBank className="w-4 h-4 text-teal-400 mx-auto mb-1" />
-            <span className="block text-[11px] font-medium text-slate-300">Budget Limits</span>
-          </div>
-          <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
-            <TrendingUp className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-            <span className="block text-[11px] font-medium text-slate-300">Analytics &amp; FX</span>
-          </div>
-          <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
-            <Database className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
-            <span className="block text-[11px] font-medium text-slate-300">Monthly Folders</span>
           </div>
         </div>
       </div>
