@@ -146,7 +146,7 @@ export const PostScrollFeed: React.FC<PostScrollFeedProps> = ({
     if (item.category === 'groceries') return 'Groceries';
     if (item.category === 'travel') return 'Travel';
     if (item.category === 'university') return 'University';
-    return item.subCategory ? subCategoryLabelMap[item.subCategory] || 'Others' : 'Others';
+    return 'Others';
   };
 
   const renderExpenseItem = (item: ExpenseItem, isArchived = false) => {

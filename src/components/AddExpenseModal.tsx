@@ -37,7 +37,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 }) => {
   const [merchant, setMerchant] = useState('');
   const [category, setCategory] = useState<ExpenseCategory>(defaultCategory);
-  const [subCategory, setSubCategory] = useState<OtherSubCategory>('dining_coffee');
+  const [subCategory, setSubCategory] = useState<OtherSubCategory | undefined>(undefined);
   const [transportType, setTransportType] = useState<string>('Tube / Underground');
   const [travelFrom, setTravelFrom] = useState('');
   const [travelTo, setTravelTo] = useState('');
@@ -58,7 +58,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     if (editingExpense) {
       setMerchant(editingExpense.merchant);
       setCategory(editingExpense.category);
-      setSubCategory(editingExpense.subCategory ?? 'dining_coffee');
+      setSubCategory(editingExpense.subCategory);
       setAmountGBP(String(editingExpense.amountGBP));
       setDate(editingExpense.date);
       setNotes(editingExpense.notes ?? '');
@@ -81,7 +81,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     } else {
       setCategory(defaultCategory);
       setMerchant(defaultSupermarket || '');
-      setSubCategory('dining_coffee');
+      setSubCategory(undefined);
       setTransportType('Tube / Underground');
       setTravelFrom('');
       setTravelTo('');
@@ -166,7 +166,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         merchant: finalMerchant,
         location: finalLocation,
         category,
-        subCategory: category === 'others' ? subCategory : undefined,
+        subCategory: undefined,
         amountGBP: Math.round(parsedAmount * 100) / 100,
         paymentMethod: editingExpense?.paymentMethod || 'Monzo Debit',
         week: editingExpense?.week || computedWeek,

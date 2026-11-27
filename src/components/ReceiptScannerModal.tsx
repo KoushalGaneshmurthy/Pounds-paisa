@@ -302,7 +302,7 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
       merchant: merchant.trim(),
       location: '',
       category,
-      subCategory: category === 'others' ? subCategory : undefined,
+      subCategory: undefined,
       amountGBP: Math.round(parsedAmount * 100) / 100,
       paymentMethod: 'Monzo Debit',
       week: inferWeekFromDate(date),
@@ -500,28 +500,9 @@ export const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({
                 ))}
               </div>
 
-              {category === 'others' && (
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Other Bucket
-                  </label>
-                  <select
-                    value={subCategory}
-                    onChange={(e) => setSubCategory(e.target.value as OtherSubCategory)}
-                    className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-900"
-                  >
-                    {OTHER_SUBCATEGORIES.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  {category === 'university'
+                  {category === 'university' || category === 'others'
                     ? 'Expense Name'
                     : category === 'groceries'
                       ? 'Store / Supermarket'
