@@ -137,8 +137,8 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       const route = `${cleanFrom} → ${cleanTo}`;
       finalTitle = route;
       finalMerchant = transportType;
-      finalLocation = route;
-      finalNotes = `${transportType}: ${route}`;
+      finalLocation = '';
+      finalNotes = undefined;
     } else if (category === 'university' || category === 'others') {
       if (!finalMerchant) {
         setError('Please enter the expense name.');

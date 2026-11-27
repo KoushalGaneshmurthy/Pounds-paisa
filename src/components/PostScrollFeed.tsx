@@ -176,24 +176,37 @@ export const PostScrollFeed: React.FC<PostScrollFeedProps> = ({
               )}
             </div>
 
-            <h4 className="font-display text-sm font-semibold text-slate-900 sm:text-[15px]">
-              {item.title || item.merchant}
-            </h4>
-
-            {item.notes && (
-              <p className="text-xs leading-relaxed text-slate-600 max-w-2xl">{item.notes}</p>
-            )}
-
-            {(item.location || (item.title && item.title !== item.merchant)) && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-0.5 text-xs text-slate-500">
-                <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                  <span>
-                    {item.merchant}
-                    {item.location ? ` · ${item.location}` : ''}
-                  </span>
-                </span>
+            {item.category === 'travel' ? (
+              <div className="space-y-0.5">
+                <h4 className="font-display text-sm font-semibold text-slate-900 sm:text-[15px]">
+                  {item.title}
+                </h4>
+                <div className="text-xs text-slate-500 font-medium pt-0.5">
+                  <span>{item.merchant}</span>
+                </div>
               </div>
+            ) : (
+              <>
+                <h4 className="font-display text-sm font-semibold text-slate-900 sm:text-[15px]">
+                  {item.title || item.merchant}
+                </h4>
+
+                {item.notes && (
+                  <p className="text-xs leading-relaxed text-slate-600 max-w-2xl">{item.notes}</p>
+                )}
+
+                {(item.location || (item.title && item.title !== item.merchant)) && (
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-0.5 text-xs text-slate-500">
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                      <span>
+                        {item.merchant}
+                        {item.location ? ` · ${item.location}` : ''}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
