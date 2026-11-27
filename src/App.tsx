@@ -135,7 +135,22 @@ export default function App() {
     isVaultReady.current = false;
     setCurrentUser(user);
     if (!user) {
-      // Clean wipe of sensitive financial records upon logout
+      // Clean wipe of sensitive financial records and session upon logout
+      setActiveLocalSession(null);
+      try {
+        // Clear all Supabase cached tokens from localStorage
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+            localStorage.removeItem(k);
+          }
+        }
+        if (supabase && isSupabaseConfigured()) {
+          await supabase.auth.signOut();
+        }
+      } catch {
+        // ignore
+      }
       setExpenses([]);
       setIncomes([]);
       setArchives([]);
@@ -190,14 +205,15 @@ export default function App() {
       const activeLocal = getActiveLocalSession();
       if (activeLocal) {
         await switchUserVault(activeLocal);
-      } else if (isSupabaseConfigured() && supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          await switchUserVault(session.user);
-        } else {
-          isVaultReady.current = true;
-        }
       } else {
+        // If no active session, stay logged out and ensure Supabase session does not auto-login
+        if (isSupabaseConfigured() && supabase) {
+          try {
+            await supabase.auth.signOut();
+          } catch {
+            // ignore
+          }
+        }
         isVaultReady.current = true;
       }
       if (isMounted) {
@@ -217,7 +233,7 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if (event === 'SIGNED_IN' && session?.user && getActiveLocalSession()) {
         switchUserVault(session.user);
       } else if (event === 'SIGNED_OUT') {
         switchUserVault(null);
@@ -566,11 +582,9 @@ export default function App() {
               type="button"
               onClick={() => setIsAuthModalOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
-              title={`Active Vault: @${currentUser.user_metadata?.username || currentUser.username || currentUser.email}`}
+              title={`Account: @${currentUser.user_metadata?.username || currentUser.username || currentUser.email}`}
             >
-              <ShieldCheck
-                className={`h-3.5 w-3.5 text-emerald-400 ${isCloudSyncing ? 'animate-pulse' : ''}`}
-              />
+              <User className="h-3.5 w-3.5 text-emerald-400" />
               <span className="hidden sm:inline">
                 @{currentUser.user_metadata?.username || currentUser.username || currentUser.email?.split('@')[0]}
               </span>
@@ -581,7 +595,7 @@ export default function App() {
               type="button"
               onClick={() => switchUserVault(null)}
               className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-300 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 transition"
-              title="Sign Out & Lock Vault"
+              title="Sign Out"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span className="hidden md:inline">Sign Out</span>

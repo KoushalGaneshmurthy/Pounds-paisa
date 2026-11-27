@@ -281,25 +281,25 @@ export function AuthModal({
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              User Vault &amp; Auth
+              User Account
               {currentUser ? (
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                  Unlocked
+                  Active
                 </span>
               ) : isConfigured ? (
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30">
-                  Cloud + Local
+                  Cloud Ready
                 </span>
               ) : (
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  Encrypted Local
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-300 border border-slate-500/30">
+                  Local
                 </span>
               )}
             </h2>
             <p className="text-xs text-slate-300">
               {currentUser
                 ? `Logged in as @${currentHandle}`
-                : 'Isolated accounts with AES-256 client-side vault encryption'}
+                : 'Multi-user accounts with private isolated storage'}
             </p>
           </div>
         </div>
@@ -323,8 +323,7 @@ export function AuthModal({
           <div className="space-y-5">
             <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2.5">
               <div className="flex items-center justify-between text-xs text-slate-400 uppercase tracking-wider font-semibold">
-                <span>Active Account</span>
-                <span className="text-[10px] text-emerald-400 font-mono">AES-256 GCM</span>
+                <span>Account Info</span>
               </div>
               <div className="flex items-center gap-2.5 text-base font-bold text-white">
                 <User className="w-5 h-5 text-teal-400" />
@@ -338,7 +337,7 @@ export function AuthModal({
               )}
               <div className="text-xs text-slate-400 flex items-center gap-2 pt-1 border-t border-white/5">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Zero data leakage: all expenses and archives locked to this user.</span>
+                <span>Private and isolated to this account.</span>
               </div>
             </div>
 
@@ -597,39 +596,12 @@ export function AuthModal({
                   disabled={loading}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 font-bold text-[#0C232D] text-sm shadow-lg shadow-teal-500/20 transition disabled:opacity-50"
                 >
-                  {loading ? 'Creating Encrypted Vault...' : 'Create Account'}
+                  {loading ? 'Creating account...' : 'Create Account'}
                 </button>
               </form>
             )}
           </div>
         )}
-
-        {/* Security & Encryption Footer Card */}
-        <div className="mt-6 pt-4 border-t border-white/10 flex flex-col gap-2 text-[11px] text-slate-400">
-          <div className="flex items-center justify-between font-semibold text-slate-300">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              Security Architecture
-            </span>
-            <span className="px-1.5 py-0.5 rounded bg-white/10 text-teal-300 font-mono text-[10px]">
-              AES-GCM-256 + PBKDF2
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-            <div className="p-2 rounded-lg bg-black/30 border border-white/5 space-y-0.5">
-              <span className="text-slate-400 block text-[10px] uppercase font-semibold">Vault Storage</span>
-              <span className="text-white font-medium flex items-center gap-1">
-                Client-Side Encrypted
-              </span>
-            </div>
-            <div className="p-2 rounded-lg bg-black/30 border border-white/5 space-y-0.5">
-              <span className="text-slate-400 block text-[10px] uppercase font-semibold">Data Isolation</span>
-              <span className="text-emerald-400 font-medium flex items-center gap-1">
-                Zero Cross-User Leak
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

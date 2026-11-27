@@ -110,10 +110,10 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }
 
       if (loggedInUser) {
-        setSuccessMsg('Vault decrypted successfully.');
+        setSuccessMsg('Signed in successfully.');
         setTimeout(() => {
           onLoginSuccess(loggedInUser);
-        }, 400);
+        }, 300);
       }
     } catch (err: any) {
       setErrorMsg(err?.message || 'Failed to sign in. Please try again.');
@@ -189,7 +189,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       setSuccessMsg(`Account created for @${cleanUsername}.`);
       setTimeout(() => {
         onLoginSuccess(createdUser);
-      }, 500);
+      }, 400);
     } catch (err: any) {
       setErrorMsg(err?.message || 'Failed to create account.');
     } finally {
@@ -215,7 +215,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             Pounds &amp; Paisa
           </h1>
           <p className="text-sm text-slate-300">
-            Sign in to access your budget &amp; expense vault
+            Sign in to access your budget
           </p>
         </div>
 
@@ -313,7 +313,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 disabled={loading}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 font-bold text-[#0C232D] text-sm shadow-lg shadow-teal-500/25 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
               >
-                <span>{loading ? 'Decrypting Vault...' : 'Sign In'}</span>
+                <span>{loading ? 'Signing in...' : 'Sign In'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -400,22 +400,11 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 disabled={loading}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 font-bold text-[#0C232D] text-sm shadow-lg shadow-teal-500/25 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
               >
-                <span>{loading ? 'Creating Encrypted Vault...' : 'Create Account'}</span>
+                <span>{loading ? 'Creating account...' : 'Create Account'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
           )}
-
-          {/* Encryption status */}
-          <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
-            <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
-              <ShieldCheck className="w-4 h-4" />
-              AES-GCM-256 Encrypted
-            </span>
-            <span className="px-2 py-0.5 rounded bg-white/10 text-slate-300 font-mono text-[10px]">
-              Zero Data Leakage
-            </span>
-          </div>
         </div>
       </div>
     </div>
