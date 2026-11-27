@@ -4,6 +4,7 @@
 -- 1. Create Profiles table (mirrors auth.users)
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username TEXT UNIQUE,
   email TEXT,
   display_name TEXT,
   created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW()),
@@ -24,14 +25,16 @@ CREATE POLICY "Users can update their own profile"
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, display_name)
+  INSERT INTO public.profiles (id, username, email, display_name)
   VALUES (
     NEW.id,
+    COALESCE(LOWER(NEW.raw_user_meta_data->>'username'), split_part(NEW.email, '@', 1)),
     NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1))
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1))
   )
   ON CONFLICT (id) DO UPDATE
   SET email = EXCLUDED.email,
+      username = COALESCE(EXCLUDED.username, public.profiles.username),
       updated_at = TIMEZONE('utc', NOW());
   RETURN NEW;
 END;
@@ -41,6 +44,12 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT OR UPDATE ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Helper function to resolve username to email for seamless username login
+CREATE OR REPLACE FUNCTION public.get_email_by_username(p_username TEXT)
+RETURNS TEXT AS $$
+  SELECT email FROM public.profiles WHERE LOWER(username) = LOWER(p_username) LIMIT 1;
+$$ LANGUAGE sql SECURITY DEFINER;
 
 -- 2. Budget Configuration Table
 CREATE TABLE IF NOT EXISTS public.budget_configs (

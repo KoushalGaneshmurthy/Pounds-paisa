@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Cloud, Database, Plus, RefreshCw, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Cloud, Database, Plus, RefreshCw, ShieldCheck, Sparkles, User } from 'lucide-react';
 import {
   ArchivedMonth,
   BudgetConfig,
@@ -35,12 +35,13 @@ import { ReceiptScannerModal } from './components/ReceiptScannerModal';
 import { AuthModal } from './components/AuthModal';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { supabaseService } from './services/supabaseService';
-
-const STORAGE_EXPENSES_KEY = 'poundwise_uk_expenses_v4';
-const STORAGE_INCOMES_KEY = 'poundwise_uk_incomes_v4';
-const STORAGE_SUPERMARKETS_KEY = 'poundwise_uk_supermarkets_v4';
-const STORAGE_ARCHIVES_KEY = 'poundwise_uk_archives_v4';
-const STORAGE_CONFIG_KEY = 'poundwise_uk_config_v4';
+import {
+  clearUserVault,
+  getActiveLocalSession,
+  loadUserVaultItem,
+  saveUserVaultItem,
+  setActiveLocalSession,
+} from './utils/cryptoVault';
 
 const SLIDES = [
   { id: 'overview', label: '01. Overview', shortLabel: 'Overview' },
@@ -52,55 +53,24 @@ const SLIDES = [
 ] as const;
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState<any>(() => getActiveLocalSession());
+  const isVaultReady = useRef(false);
+
   const [expenses, setExpenses] = useState<ExpenseItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_EXPENSES_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch {
-      // ignore storage errors
-    }
+    // If an active session exists, start clean until vault decrypts
+    if (getActiveLocalSession()) return [];
     return INITIAL_EXPENSES;
   });
 
   const [incomes, setIncomes] = useState<IncomeItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_INCOMES_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch {
-      // ignore
-    }
+    if (getActiveLocalSession()) return [];
     return INITIAL_INCOMES;
   });
 
-  const [supermarkets, setSupermarkets] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_SUPERMARKETS_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {
-      // ignore
-    }
-    return DEFAULT_SUPERMARKETS;
-  });
+  const [supermarkets, setSupermarkets] = useState<string[]>(DEFAULT_SUPERMARKETS);
 
   const [archives, setArchives] = useState<ArchivedMonth[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_ARCHIVES_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch {
-      // ignore
-    }
+    if (getActiveLocalSession()) return [];
     return INITIAL_ARCHIVES;
   });
 
@@ -114,21 +84,6 @@ export default function App() {
 
   const [config, setConfig] = useState<BudgetConfig>(() => {
     const cachedFx = getCachedFxRate(DEFAULT_BUDGET_CONFIG.gbpToInrRate);
-    try {
-      const saved = localStorage.getItem(STORAGE_CONFIG_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed.monthlyAllowanceGBP === 'number') {
-          return {
-            ...DEFAULT_BUDGET_CONFIG,
-            ...parsed,
-            gbpToInrRate: cachedFx.rate || parsed.gbpToInrRate || 0,
-          };
-        }
-      }
-    } catch {
-      // ignore
-    }
     return { ...DEFAULT_BUDGET_CONFIG, gbpToInrRate: cachedFx.rate };
   });
 
@@ -152,7 +107,6 @@ export default function App() {
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
 
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -163,11 +117,11 @@ export default function App() {
     try {
       const cloud = await supabaseService.fetchUserData(userId);
       if (cloud) {
-        if (cloud.expenses.length > 0) setExpenses(cloud.expenses);
-        if (cloud.incomes.length > 0) setIncomes(cloud.incomes);
+        if (cloud.expenses && cloud.expenses.length > 0) setExpenses(cloud.expenses);
+        if (cloud.incomes && cloud.incomes.length > 0) setIncomes(cloud.incomes);
         if (cloud.config) setConfig(cloud.config);
-        if (cloud.archives.length > 0) setArchives(cloud.archives);
-        if (cloud.supermarkets.length > 0) {
+        if (cloud.archives && cloud.archives.length > 0) setArchives(cloud.archives);
+        if (cloud.supermarkets && cloud.supermarkets.length > 0) {
           setSupermarkets((prev) => Array.from(new Set([...prev, ...cloud.supermarkets])));
         }
       }
@@ -176,65 +130,132 @@ export default function App() {
     }
   }, []);
 
+  const switchUserVault = useCallback(async (user: any) => {
+    isVaultReady.current = false;
+    setCurrentUser(user);
+    if (!user) {
+      // Clean wipe of sensitive financial records upon logout
+      setExpenses([]);
+      setIncomes([]);
+      setArchives([]);
+      setConfig(DEFAULT_BUDGET_CONFIG);
+      setSupermarkets(DEFAULT_SUPERMARKETS);
+      isVaultReady.current = true;
+      return;
+    }
+
+    // Load from user's isolated AES-GCM encrypted local vault
+    const [vExpenses, vIncomes, vArchives, vConfig, vSupermarkets] = await Promise.all([
+      loadUserVaultItem<ExpenseItem[]>(user.id, 'expenses', []),
+      loadUserVaultItem<IncomeItem[]>(user.id, 'incomes', []),
+      loadUserVaultItem<ArchivedMonth[]>(user.id, 'archives', []),
+      loadUserVaultItem<BudgetConfig>(user.id, 'config', DEFAULT_BUDGET_CONFIG),
+      loadUserVaultItem<string[]>(user.id, 'supermarkets', DEFAULT_SUPERMARKETS),
+    ]);
+
+    setExpenses(vExpenses);
+    setIncomes(vIncomes);
+    setArchives(vArchives);
+    setConfig(vConfig);
+    setSupermarkets(vSupermarkets);
+
+    // If Supabase cloud is configured, pull cloud state and merge
+    if (isSupabaseConfigured()) {
+      setIsCloudSyncing(true);
+      try {
+        const cloud = await supabaseService.fetchUserData(user.id);
+        if (cloud) {
+          if (cloud.expenses && cloud.expenses.length > 0) setExpenses(cloud.expenses);
+          if (cloud.incomes && cloud.incomes.length > 0) setIncomes(cloud.incomes);
+          if (cloud.archives && cloud.archives.length > 0) setArchives(cloud.archives);
+          if (cloud.config) setConfig(cloud.config);
+          if (cloud.supermarkets && cloud.supermarkets.length > 0) {
+            setSupermarkets((prev) => Array.from(new Set([...prev, ...cloud.supermarkets])));
+          }
+        }
+      } catch (err) {
+        console.warn('Cloud sync on switchUserVault:', err);
+      } finally {
+        setIsCloudSyncing(false);
+      }
+    }
+    isVaultReady.current = true;
+  }, []);
+
+  // Initialize active session on mount
+  useEffect(() => {
+    let isMounted = true;
+    const initSession = async () => {
+      const activeLocal = getActiveLocalSession();
+      if (activeLocal) {
+        await switchUserVault(activeLocal);
+      } else if (isSupabaseConfigured() && supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await switchUserVault(session.user);
+        } else {
+          isVaultReady.current = true;
+        }
+      } else {
+        isVaultReady.current = true;
+      }
+      if (isMounted) {
+        isVaultReady.current = true;
+      }
+    };
+    initSession();
+    return () => {
+      isMounted = false;
+    };
+  }, [switchUserVault]);
+
+  // Listen to Supabase auth changes
   useEffect(() => {
     if (!supabase || !isSupabaseConfigured()) return;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const user = session?.user ?? null;
-      setCurrentUser(user);
-      if (user) loadCloudData(user.id);
-    });
-
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      const user = session?.user ?? null;
-      setCurrentUser(user);
-      if (user) loadCloudData(user.id);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        switchUserVault(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        switchUserVault(null);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, [loadCloudData]);
+  }, [switchUserVault]);
+
+  // Persist into user-scoped AES-256 encrypted vault (only when vault is unlocked and ready)
+  useEffect(() => {
+    if (!isVaultReady.current) return;
+    const targetUserId = currentUser?.id || 'guest_user';
+    saveUserVaultItem(targetUserId, 'expenses', expenses);
+  }, [expenses, currentUser?.id]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_EXPENSES_KEY, JSON.stringify(expenses));
-    } catch {
-      // ignore
-    }
-  }, [expenses]);
+    if (!isVaultReady.current) return;
+    const targetUserId = currentUser?.id || 'guest_user';
+    saveUserVaultItem(targetUserId, 'incomes', incomes);
+  }, [incomes, currentUser?.id]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_INCOMES_KEY, JSON.stringify(incomes));
-    } catch {
-      // ignore
-    }
-  }, [incomes]);
+    if (!isVaultReady.current) return;
+    const targetUserId = currentUser?.id || 'guest_user';
+    saveUserVaultItem(targetUserId, 'supermarkets', supermarkets);
+  }, [supermarkets, currentUser?.id]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_SUPERMARKETS_KEY, JSON.stringify(supermarkets));
-    } catch {
-      // ignore
-    }
-  }, [supermarkets]);
+    if (!isVaultReady.current) return;
+    const targetUserId = currentUser?.id || 'guest_user';
+    saveUserVaultItem(targetUserId, 'archives', archives);
+  }, [archives, currentUser?.id]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_ARCHIVES_KEY, JSON.stringify(archives));
-    } catch {
-      // ignore
-    }
-  }, [archives]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_CONFIG_KEY, JSON.stringify(config));
-    } catch {
-      // ignore
-    }
-  }, [config]);
+    if (!isVaultReady.current) return;
+    const targetUserId = currentUser?.id || 'guest_user';
+    saveUserVaultItem(targetUserId, 'config', config);
+  }, [config, currentUser?.id]);
 
   const refreshTodayFxRate = useCallback(async () => {
     setFxLoading(true);
@@ -491,6 +512,7 @@ export default function App() {
     refreshTodayFxRate();
     if (currentUser) {
       supabaseService.clearAllUserData(currentUser.id);
+      clearUserVault(currentUser.id);
     }
   };
 
@@ -540,25 +562,23 @@ export default function App() {
               className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition border ${
                 currentUser
                   ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
-                  : isSupabaseConfigured()
-                  ? 'border-teal-500/40 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20'
-                  : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
+                  : 'border-teal-500/40 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20'
               }`}
               title={
                 currentUser
-                  ? `Logged in: ${currentUser.email}`
-                  : isSupabaseConfigured()
-                  ? 'Sign in to sync with Supabase'
-                  : 'Supabase setup / local mode'
+                  ? `Active Vault: @${currentUser.user_metadata?.username || currentUser.username || currentUser.email}`
+                  : 'Sign in to access isolated encrypted vault'
               }
             >
-              <Cloud
+              <ShieldCheck
                 className={`h-3.5 w-3.5 ${
                   currentUser ? 'text-emerald-400' : 'text-teal-400'
                 } ${isCloudSyncing ? 'animate-pulse' : ''}`}
               />
               <span className="hidden sm:inline">
-                {currentUser ? 'Cloud Synced' : isSupabaseConfigured() ? 'Cloud Sync' : 'Local Mode'}
+                {currentUser
+                  ? `@${currentUser.user_metadata?.username || currentUser.username || currentUser.email?.split('@')[0]}`
+                  : 'Sign In / Vault'}
               </span>
               {currentUser && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
             </button>
@@ -910,12 +930,7 @@ export default function App() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         currentUser={currentUser}
-        onUserChange={(user) => {
-          setCurrentUser(user);
-          if (user) {
-            loadCloudData(user.id);
-          }
-        }}
+        onUserChange={switchUserVault}
         onSyncPush={
           currentUser
             ? async () => {

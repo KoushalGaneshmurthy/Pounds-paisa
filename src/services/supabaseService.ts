@@ -15,6 +15,28 @@ export interface UserCloudData {
 }
 
 export const supabaseService = {
+  async resolveEmailFromUsername(username: string): Promise<string | null> {
+    if (!supabase || !isSupabaseConfigured()) return null;
+    try {
+      const clean = username.trim().toLowerCase();
+      const { data, error } = await supabase.rpc('get_email_by_username', {
+        p_username: clean,
+      });
+      if (!error && data) return String(data);
+
+      // Fallback query directly on profiles if accessible
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('username', clean)
+        .maybeSingle();
+
+      return profile?.email || null;
+    } catch {
+      return null;
+    }
+  },
+
   async fetchUserData(userId: string): Promise<UserCloudData | null> {
     if (!supabase || !isSupabaseConfigured()) return null;
 
