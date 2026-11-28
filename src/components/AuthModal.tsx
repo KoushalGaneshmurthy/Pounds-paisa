@@ -191,7 +191,7 @@ export function AuthModal({
     }
 
     const effectiveEmail =
-      signUpEmail.trim() || `${cleanUsername.toLowerCase()}@pounds-paisa.local`;
+      signUpEmail.trim() || `${cleanUsername.toLowerCase()}@pounds-paisa.app`;
 
     try {
       let createdUser: any = null;

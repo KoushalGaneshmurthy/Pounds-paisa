@@ -83,6 +83,7 @@ export const supabaseService = {
         title: row.title,
         source: row.source,
         amountGBP: Number(row.amount_gbp),
+        hours: row.hours != null ? Number(row.hours) : undefined,
         date: row.date,
         rateAtEntry: row.rate_at_entry ? Number(row.rate_at_entry) : undefined,
       }));
@@ -168,6 +169,7 @@ export const supabaseService = {
       title: income.title,
       source: income.source,
       amount_gbp: income.amountGBP,
+      hours: income.hours != null ? income.hours : null,
       date: income.date,
       rate_at_entry: income.rateAtEntry || null,
     });

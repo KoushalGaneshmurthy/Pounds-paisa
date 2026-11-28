@@ -223,7 +223,7 @@ export async function registerLocalUser(
 ): Promise<VaultUser> {
   const users = getLocalUsersDirectory();
   const cleanUsername = username.trim().toLowerCase();
-  const cleanEmail = (email.trim() || `${cleanUsername}@pounds-paisa.local`).toLowerCase();
+  const cleanEmail = (email.trim() || `${cleanUsername}@pounds-paisa.app`).toLowerCase();
 
   // Check unique username
   const existingUser = users.find(

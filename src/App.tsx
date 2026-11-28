@@ -35,6 +35,7 @@ import { ArchiveFolderModal } from './components/ArchiveFolderModal';
 import { ReceiptScannerModal } from './components/ReceiptScannerModal';
 import { AuthModal } from './components/AuthModal';
 import { LoginScreen } from './components/LoginScreen';
+import { CloudSetupModal } from './components/CloudSetupModal';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { supabaseService } from './services/supabaseService';
 import {
@@ -110,6 +111,7 @@ export default function App() {
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isCloudSetupOpen, setIsCloudSetupOpen] = useState(false);
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
 
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -183,12 +185,26 @@ export default function App() {
       try {
         const cloud = await supabaseService.fetchUserData(user.id);
         if (cloud) {
-          if (cloud.expenses && cloud.expenses.length > 0) setExpenses(cloud.expenses);
-          if (cloud.incomes && cloud.incomes.length > 0) setIncomes(cloud.incomes);
+          const hasCloudExpenses = cloud.expenses && cloud.expenses.length > 0;
+          const hasCloudIncomes = cloud.incomes && cloud.incomes.length > 0;
+
+          if (hasCloudExpenses) setExpenses(cloud.expenses);
+          if (hasCloudIncomes) setIncomes(cloud.incomes);
           if (cloud.archives && cloud.archives.length > 0) setArchives(cloud.archives);
           if (cloud.config) setConfig(cloud.config);
           if (cloud.supermarkets && cloud.supermarkets.length > 0) {
             setSupermarkets((prev) => Array.from(new Set([...prev, ...cloud.supermarkets])));
+          }
+
+          // If cloud account is empty but local storage has data from earlier offline use, push to cloud!
+          if (!hasCloudExpenses && !hasCloudIncomes && (vExpenses.length > 0 || vIncomes.length > 0)) {
+            supabaseService.migrateLocalData(user.id, {
+              expenses: vExpenses,
+              incomes: vIncomes,
+              config: vConfig,
+              archives: vArchives,
+              supermarkets: vSupermarkets,
+            }).catch((err) => console.warn('Auto-migration to cloud:', err));
           }
         }
       } catch (err) {
@@ -580,6 +596,33 @@ export default function App() {
           </nav>
 
           <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsCloudSetupOpen(true)}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition border ${
+                isSupabaseConfigured()
+                  ? 'border-teal-500/40 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20'
+                  : 'border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'
+              }`}
+              title={
+                isSupabaseConfigured()
+                  ? 'Cloud Database Connected (Multi-device worldwide)'
+                  : 'Running in Local Offline Mode. Click to connect Supabase Cloud database'
+              }
+            >
+              {isSupabaseConfigured() ? (
+                <>
+                  <Cloud className="h-3.5 w-3.5 text-teal-400" />
+                  <span className="hidden lg:inline">Cloud Synced</span>
+                </>
+              ) : (
+                <>
+                  <Database className="h-3.5 w-3.5 text-amber-400" />
+                  <span className="hidden lg:inline">Connect Cloud</span>
+                </>
+              )}
+            </button>
+
             <button
               type="button"
               onClick={() => setIsAuthModalOpen(true)}
@@ -985,6 +1028,16 @@ export default function App() {
             : undefined
         }
         hasLocalData={expenses.length > 0 || incomes.length > 0}
+      />
+
+      <CloudSetupModal
+        isOpen={isCloudSetupOpen}
+        onClose={() => setIsCloudSetupOpen(false)}
+        onConnected={() => {
+          if (currentUser?.id) {
+            loadCloudData(currentUser.id);
+          }
+        }}
       />
     </div>
   );

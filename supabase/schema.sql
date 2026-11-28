@@ -105,17 +105,29 @@ CREATE POLICY "Users can manage their own expenses"
 CREATE INDEX IF NOT EXISTS idx_expenses_user_date ON public.expenses(user_id, date DESC);
 CREATE INDEX IF NOT EXISTS idx_expenses_user_category ON public.expenses(user_id, category);
 
--- 4. Incomes Table
+-- 4. Incomes / Salary Table
 CREATE TABLE IF NOT EXISTS public.incomes (
   id TEXT PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   source TEXT NOT NULL,
   amount_gbp NUMERIC(10, 2) NOT NULL,
+  hours NUMERIC(6, 2),
   date DATE NOT NULL,
   rate_at_entry NUMERIC(10, 4),
   created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW())
 );
+
+-- Ensure hours column exists if table was created previously
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' AND table_name = 'incomes' AND column_name = 'hours'
+  ) THEN
+    ALTER TABLE public.incomes ADD COLUMN hours NUMERIC(6, 2);
+  END IF;
+END $$;
 
 ALTER TABLE public.incomes ENABLE ROW LEVEL SECURITY;
 

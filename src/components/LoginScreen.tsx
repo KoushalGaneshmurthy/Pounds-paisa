@@ -3,10 +3,11 @@ import {
   AlertCircle,
   ArrowRight,
   CheckCircle2,
+  Cloud,
+  Database,
   Lock,
   Mail,
   Shield,
-  ShieldCheck,
   User,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -16,6 +17,7 @@ import {
   registerLocalUser,
   setActiveLocalSession,
 } from '../utils/cryptoVault';
+import { CloudSetupModal } from './CloudSetupModal';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: any) => void;
@@ -35,7 +37,8 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const isConfigured = isSupabaseConfigured();
+  const [isConfigured, setIsConfigured] = useState(() => isSupabaseConfigured());
+  const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +56,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     try {
       let loggedInUser: any = null;
 
-      // 1. If Supabase is configured, try Supabase cloud authentication first
+      // 1. If Supabase is configured, authenticate with Supabase Cloud
       if (isConfigured && supabase) {
         let emailToTry = cleanId;
 
@@ -71,7 +74,22 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           password,
         });
 
-        if (!error && data?.user) {
+        if (error) {
+          const msg = error.message.toLowerCase();
+          if (msg.includes('email not confirmed')) {
+            throw new Error(
+              'Email not confirmed in Supabase. Please turn OFF "Confirm email" in Supabase Auth Settings (Auth → Providers → Email) so users can sign in immediately.'
+            );
+          }
+          if (msg.includes('invalid login credentials')) {
+            throw new Error(
+              'Invalid credentials. Please verify your username/email and password, or create an account.'
+            );
+          }
+          throw new Error(error.message || 'Failed to sign in.');
+        }
+
+        if (data?.user) {
           loggedInUser = data.user;
           setActiveLocalSession({
             id: data.user.id,
@@ -85,26 +103,22 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         }
       }
 
-      // 2. Fallback to Local Encrypted Vault
+      // 2. Fallback to Local Encrypted Vault (only if cloud is not connected)
       if (!loggedInUser) {
-        try {
-          const localUser = await authenticateLocalUser(cleanId, password);
-          loggedInUser = {
-            id: localUser.id,
-            email: localUser.email,
-            username: localUser.username,
-            user_metadata: {
+        if (!isConfigured) {
+          try {
+            const localUser = await authenticateLocalUser(cleanId, password);
+            loggedInUser = {
+              id: localUser.id,
+              email: localUser.email,
               username: localUser.username,
-              display_name: localUser.displayName,
-            },
-          };
-        } catch (localErr: any) {
-          if (!isConfigured) {
+              user_metadata: {
+                username: localUser.username,
+                display_name: localUser.displayName,
+              },
+            };
+          } catch (localErr: any) {
             throw localErr;
-          } else {
-            throw new Error(
-              'Invalid login credentials. Please check your username/email and password.'
-            );
           }
         }
       }
@@ -148,12 +162,12 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     }
 
     const effectiveEmail =
-      signUpEmail.trim() || `${cleanUsername.toLowerCase()}@pounds-paisa.local`;
+      signUpEmail.trim() || `${cleanUsername.toLowerCase()}@pounds-paisa.app`;
 
     try {
       let createdUser: any = null;
 
-      // 1. If Supabase is configured, create Supabase account
+      // 1. If Supabase is configured, create Supabase cloud account
       if (isConfigured && supabase) {
         const { data, error } = await supabase.auth.signUp({
           email: effectiveEmail,
@@ -166,15 +180,26 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          throw new Error(error.message || 'Failed to create Supabase account.');
+        }
+
         if (data?.user) {
           createdUser = data.user;
+          // Store session mirror if session established immediately
+          setActiveLocalSession({
+            id: data.user.id,
+            username: cleanUsername,
+            email: data.user.email || effectiveEmail,
+            displayName: cleanUsername,
+            passwordHash: '',
+            salt: '',
+            createdAt: data.user.created_at,
+          });
         }
-      }
-
-      // 2. Register local encrypted vault account
-      const localUser = await registerLocalUser(cleanUsername, effectiveEmail, password);
-      if (!createdUser) {
+      } else {
+        // 2. Register local encrypted vault account (offline mode only)
+        const localUser = await registerLocalUser(cleanUsername, effectiveEmail, password);
         createdUser = {
           id: localUser.id,
           email: localUser.email,
@@ -207,11 +232,11 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       <div className="relative z-10 w-full max-w-md">
         {/* Brand Header */}
-        <div className="text-center mb-7">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-[#0C232D] shadow-xl shadow-teal-500/25 mb-4">
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-[#0C232D] shadow-xl shadow-teal-500/25 mb-3.5">
             <Shield className="w-8 h-8 stroke-[2.5]" />
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2 font-display">
+          <h1 className="text-3xl font-extrabold tracking-tight text-white mb-1.5 font-display">
             Pounds &amp; Paisa
           </h1>
           <p className="text-sm text-slate-300">
@@ -221,6 +246,43 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
         {/* Auth Card */}
         <div className="bg-[#0F2936]/90 border border-teal-500/30 rounded-2xl shadow-2xl p-6 sm:p-8 backdrop-blur-xl">
+          {/* Cloud vs Local Status Indicator */}
+          {isConfigured ? (
+            <div className="flex items-center justify-between mb-4 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs">
+              <span className="flex items-center gap-2 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Cloud Database Connected (Multi-device worldwide)
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsCloudModalOpen(true)}
+                className="text-[11px] text-teal-300 hover:text-white underline font-semibold"
+              >
+                Settings
+              </button>
+            </div>
+          ) : (
+            <div className="mb-4 p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold flex items-center gap-1.5 text-amber-300">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                  Offline Local Mode (This Device Only)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsCloudModalOpen(true)}
+                  className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-semibold text-[11px] border border-amber-500/30 transition flex items-center gap-1"
+                >
+                  <Database className="w-3 h-3" />
+                  <span>Connect Cloud</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-amber-200/90 leading-tight">
+                Accounts created here will only exist on this browser. Connect Supabase Cloud to access your account across devices or in India.
+              </p>
+            </div>
+          )}
+
           {/* Tab Switcher */}
           <div className="flex border-b border-white/10 mb-6 text-sm">
             <button
@@ -407,6 +469,12 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           )}
         </div>
       </div>
+
+      <CloudSetupModal
+        isOpen={isCloudModalOpen}
+        onClose={() => setIsCloudModalOpen(false)}
+        onConnected={() => setIsConfigured(isSupabaseConfigured())}
+      />
     </div>
   );
 }
