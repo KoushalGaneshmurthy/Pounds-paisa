@@ -3,8 +3,6 @@ import {
   AlertCircle,
   ArrowRight,
   CheckCircle2,
-  Cloud,
-  Database,
   Lock,
   Mail,
   Shield,
@@ -17,7 +15,6 @@ import {
   registerLocalUser,
   setActiveLocalSession,
 } from '../utils/cryptoVault';
-import { CloudSetupModal } from './CloudSetupModal';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: any) => void;
@@ -37,8 +34,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const [isConfigured, setIsConfigured] = useState(() => isSupabaseConfigured());
-  const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
+  const isConfigured = isSupabaseConfigured();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -246,42 +242,6 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
         {/* Auth Card */}
         <div className="bg-[#0F2936]/90 border border-teal-500/30 rounded-2xl shadow-2xl p-6 sm:p-8 backdrop-blur-xl">
-          {/* Cloud vs Local Status Indicator */}
-          {isConfigured ? (
-            <div className="flex items-center justify-between mb-4 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs">
-              <span className="flex items-center gap-2 font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Cloud Database Connected (Multi-device worldwide)
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsCloudModalOpen(true)}
-                className="text-[11px] text-teal-300 hover:text-white underline font-semibold"
-              >
-                Settings
-              </button>
-            </div>
-          ) : (
-            <div className="mb-4 p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold flex items-center gap-1.5 text-amber-300">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
-                  Offline Local Mode (This Device Only)
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIsCloudModalOpen(true)}
-                  className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-semibold text-[11px] border border-amber-500/30 transition flex items-center gap-1"
-                >
-                  <Database className="w-3 h-3" />
-                  <span>Connect Cloud</span>
-                </button>
-              </div>
-              <p className="text-[11px] text-amber-200/90 leading-tight">
-                Accounts created here will only exist on this browser. Connect Supabase Cloud to access your account across devices or in India.
-              </p>
-            </div>
-          )}
 
           {/* Tab Switcher */}
           <div className="flex border-b border-white/10 mb-6 text-sm">
@@ -469,12 +429,6 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           )}
         </div>
       </div>
-
-      <CloudSetupModal
-        isOpen={isCloudModalOpen}
-        onClose={() => setIsCloudModalOpen(false)}
-        onConnected={() => setIsConfigured(isSupabaseConfigured())}
-      />
     </div>
   );
 }

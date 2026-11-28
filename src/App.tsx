@@ -35,7 +35,6 @@ import { ArchiveFolderModal } from './components/ArchiveFolderModal';
 import { ReceiptScannerModal } from './components/ReceiptScannerModal';
 import { AuthModal } from './components/AuthModal';
 import { LoginScreen } from './components/LoginScreen';
-import { CloudSetupModal } from './components/CloudSetupModal';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { supabaseService } from './services/supabaseService';
 import {
@@ -111,7 +110,6 @@ export default function App() {
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isCloudSetupOpen, setIsCloudSetupOpen] = useState(false);
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
 
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -598,33 +596,6 @@ export default function App() {
           <div className="flex items-center gap-2.5 shrink-0">
             <button
               type="button"
-              onClick={() => setIsCloudSetupOpen(true)}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition border ${
-                isSupabaseConfigured()
-                  ? 'border-teal-500/40 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20'
-                  : 'border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'
-              }`}
-              title={
-                isSupabaseConfigured()
-                  ? 'Cloud Database Connected (Multi-device worldwide)'
-                  : 'Running in Local Offline Mode. Click to connect Supabase Cloud database'
-              }
-            >
-              {isSupabaseConfigured() ? (
-                <>
-                  <Cloud className="h-3.5 w-3.5 text-teal-400" />
-                  <span className="hidden lg:inline">Cloud Synced</span>
-                </>
-              ) : (
-                <>
-                  <Database className="h-3.5 w-3.5 text-amber-400" />
-                  <span className="hidden lg:inline">Connect Cloud</span>
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
               onClick={() => setIsAuthModalOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
               title={`Account: @${currentUser.user_metadata?.username || currentUser.username || currentUser.email}`}
@@ -893,44 +864,18 @@ export default function App() {
       {/* Footer: Copyright */}
       <footer className="relative z-10 border-t border-white/10 bg-[#091B23]/80 mt-10 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-xs text-slate-300">
-            <div>
-              <div className="flex items-center gap-2 font-medium text-slate-200">
-                <span>Pounds &amp; Paisa</span>
-                <span className="text-slate-500">·</span>
-                <span>Active Month: {config.monthLabel}</span>
-              </div>
-              <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-200 font-medium">
-                  <svg className="w-2.5 h-2.5 fill-current text-white shrink-0" viewBox="0 0 1155 1000">
-                    <path d="m577.3 0 577.4 1000H0z" />
-                  </svg>
-                  Hosted on Vercel
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-medium">
-                  <Database className="w-3 h-3 text-emerald-400 shrink-0" />
-                  Supabase PostgreSQL
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-300 font-medium">
-                  <Sparkles className="w-3 h-3 text-teal-400 shrink-0" />
-                  Gemini Vision OCR
-                </span>
-              </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-xs text-slate-400">
+            <div className="flex items-center gap-2 font-medium text-slate-300">
+              <span>Pounds &amp; Paisa</span>
+              <span className="text-slate-600">·</span>
+              <span>Active Month: {config.monthLabel}</span>
             </div>
 
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setIsAuthModalOpen(true)}
-                className="text-xs text-teal-400 hover:text-teal-300 underline underline-offset-4"
-              >
-                Cloud Sync &amp; Auth
-              </button>
-              <span className="text-slate-600">|</span>
-              <button
-                type="button"
                 onClick={() => setIsLimitsModalOpen(true)}
-                className="text-xs text-slate-300 hover:text-white underline underline-offset-4"
+                className="text-xs text-slate-400 hover:text-white transition underline underline-offset-4"
               >
                 Budget &amp; Savings Limit
               </button>
@@ -1028,16 +973,6 @@ export default function App() {
             : undefined
         }
         hasLocalData={expenses.length > 0 || incomes.length > 0}
-      />
-
-      <CloudSetupModal
-        isOpen={isCloudSetupOpen}
-        onClose={() => setIsCloudSetupOpen(false)}
-        onConnected={() => {
-          if (currentUser?.id) {
-            loadCloudData(currentUser.id);
-          }
-        }}
       />
     </div>
   );
