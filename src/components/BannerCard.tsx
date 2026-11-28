@@ -11,6 +11,8 @@ interface BannerCardProps {
   primaryAmountGBP: number;
   secondaryLabel?: string;
   secondaryAmountGBP?: number;
+  secondaryValueText?: string;
+  secondarySubtext?: string;
   limitLabel: string;
   limitAmountGBP: number;
   statusText: string;
@@ -30,6 +32,8 @@ export const BannerCard: React.FC<BannerCardProps> = ({
   primaryAmountGBP,
   secondaryLabel,
   secondaryAmountGBP,
+  secondaryValueText,
+  secondarySubtext,
   limitLabel,
   limitAmountGBP,
   statusText,
@@ -102,16 +106,22 @@ export const BannerCard: React.FC<BannerCardProps> = ({
               )}
             </div>
 
-            {secondaryLabel && typeof secondaryAmountGBP === 'number' && (
+            {secondaryLabel && (typeof secondaryAmountGBP === 'number' || secondaryValueText) && (
               <div className="min-w-0">
                 <p className="text-xs font-medium text-slate-300 whitespace-nowrap">{secondaryLabel}</p>
                 <p className="font-mono-num mt-1 text-xl font-bold text-white sm:text-2xl whitespace-nowrap">
-                  {formatGBP(secondaryAmountGBP)}
+                  {secondaryValueText || (typeof secondaryAmountGBP === 'number' ? formatGBP(secondaryAmountGBP) : '')}
                 </p>
-                {showInr && gbpToInrRate > 0 && (
+                {secondarySubtext ? (
                   <p className="font-mono-num text-xs text-slate-300/85 whitespace-nowrap">
-                    {formatINR(secondaryAmountGBP, gbpToInrRate)}
+                    {secondarySubtext}
                   </p>
+                ) : (
+                  showInr && gbpToInrRate > 0 && typeof secondaryAmountGBP === 'number' && (
+                    <p className="font-mono-num text-xs text-slate-300/85 whitespace-nowrap">
+                      {formatINR(secondaryAmountGBP, gbpToInrRate)}
+                    </p>
+                  )
                 )}
               </div>
             )}
