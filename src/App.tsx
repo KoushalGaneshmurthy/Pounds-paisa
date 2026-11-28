@@ -952,27 +952,6 @@ export default function App() {
         onClose={() => setIsAuthModalOpen(false)}
         currentUser={currentUser}
         onUserChange={switchUserVault}
-        onSyncPush={
-          currentUser
-            ? async () => {
-                await supabaseService.migrateLocalData(currentUser.id, {
-                  expenses,
-                  incomes,
-                  config,
-                  archives,
-                  supermarkets,
-                });
-              }
-            : undefined
-        }
-        onSyncPull={
-          currentUser
-            ? async () => {
-                await loadCloudData(currentUser.id);
-              }
-            : undefined
-        }
-        hasLocalData={expenses.length > 0 || incomes.length > 0}
       />
     </div>
   );

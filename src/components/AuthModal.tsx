@@ -1,21 +1,14 @@
 import React, { useState } from 'react';
 import {
-  Cloud,
-  Database,
-  ExternalLink,
-  KeyRound,
   Lock,
   LogOut,
   Mail,
-  Server,
   Shield,
   ShieldCheck,
   User,
   X,
   AlertCircle,
   CheckCircle2,
-  UploadCloud,
-  DownloadCloud,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { supabaseService } from '../services/supabaseService';
@@ -31,9 +24,6 @@ interface AuthModalProps {
   onClose: () => void;
   currentUser: any;
   onUserChange: (user: any) => void;
-  onSyncPush?: () => Promise<void>;
-  onSyncPull?: () => Promise<void>;
-  hasLocalData?: boolean;
 }
 
 export function AuthModal({
@@ -41,12 +31,8 @@ export function AuthModal({
   onClose,
   currentUser,
   onUserChange,
-  onSyncPush,
-  onSyncPull,
 }: AuthModalProps) {
-  const [mode, setMode] = useState<'signin' | 'signup' | 'setup'>(
-    currentUser ? 'signin' : 'signin'
-  );
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
 
   // Form states
   const [identifier, setIdentifier] = useState('');
@@ -58,7 +44,6 @@ export function AuthModal({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [syncLoading, setSyncLoading] = useState(false);
 
   if (!isOpen) return null;
 
@@ -341,59 +326,6 @@ export function AuthModal({
               </div>
             </div>
 
-            {/* Sync Controls (if Supabase is configured) */}
-            {isConfigured && (
-              <div className="space-y-2">
-                <div className="text-xs font-semibold text-slate-300">Cloud Synchronization</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {onSyncPush && (
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        setSyncLoading(true);
-                        setErrorMsg(null);
-                        try {
-                          await onSyncPush();
-                          setSuccessMsg('Encrypted vault synced to Supabase cloud!');
-                        } catch (err: any) {
-                          setErrorMsg(err?.message || 'Sync failed.');
-                        } finally {
-                          setSyncLoading(false);
-                        }
-                      }}
-                      disabled={syncLoading}
-                      className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-teal-600/30 hover:bg-teal-600/50 border border-teal-500/40 text-teal-200 text-xs font-semibold transition"
-                    >
-                      <UploadCloud className="w-4 h-4" />
-                      <span>Upload Cloud</span>
-                    </button>
-                  )}
-                  {onSyncPull && (
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        setSyncLoading(true);
-                        setErrorMsg(null);
-                        try {
-                          await onSyncPull();
-                          setSuccessMsg('Cloud data loaded into vault!');
-                        } catch (err: any) {
-                          setErrorMsg(err?.message || 'Pull failed.');
-                        } finally {
-                          setSyncLoading(false);
-                        }
-                      }}
-                      disabled={syncLoading}
-                      className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-200 text-xs font-semibold transition"
-                    >
-                      <DownloadCloud className="w-4 h-4" />
-                      <span>Pull Cloud</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
             <button
               onClick={handleSignOut}
               disabled={loading}
@@ -429,44 +361,10 @@ export function AuthModal({
               >
                 Create Account
               </button>
-              <button
-                type="button"
-                onClick={() => setMode('setup')}
-                className={`flex-1 pb-2.5 font-medium border-b-2 text-center transition ${
-                  mode === 'setup'
-                    ? 'border-teal-400 text-teal-300 font-semibold'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Setup Info
-              </button>
             </div>
 
             {/* Mode Content */}
-            {mode === 'setup' ? (
-              <div className="space-y-4 text-xs text-slate-300">
-                <div className="p-3.5 rounded-xl bg-teal-950/40 border border-teal-500/30 space-y-2">
-                  <div className="font-semibold text-teal-200 flex items-center gap-1.5">
-                    <Database className="w-4 h-4 text-teal-400" />
-                    How user accounts &amp; encryption work:
-                  </div>
-                  <ul className="list-disc pl-4 space-y-1.5 text-slate-300 leading-relaxed">
-                    <li>
-                      <strong>Username or Email:</strong> Log in with your email (e.g. <code>adi@example.com</code>) or your username (e.g. <code>koushal</code>).
-                    </li>
-                    <li>
-                      <strong>AES-256 Encryption:</strong> Your expenses, limits, and archives are encrypted using AES-GCM 256-bit keys before touching browser storage.
-                    </li>
-                    <li>
-                      <strong>Account Isolation:</strong> When you switch accounts or log out, your private financial data is wiped from active memory immediately.
-                    </li>
-                    <li>
-                      <strong>Cloud Backend (Optional):</strong> Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to enable cross-device cloud sync.
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            ) : mode === 'signin' ? (
+            {mode === 'signin' ? (
               <form onSubmit={handleSignIn} className="space-y-4" autoComplete="off">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1.5">
